@@ -57,6 +57,12 @@ double lineHeight(const css::ComputedStyle* style, double font_size) {
     return font_size * 1.2;
 }
 
+void translate(LayoutBox& box, double dx, double dy) {
+    box.x += dx;
+    box.y += dy;
+    for (auto& child : box.children) translate(child, dx, dy);
+}
+
 struct Builder {
     const std::unordered_map<const dom::Element*, css::ComputedStyle>& styles;
     double root_font_size;
@@ -205,6 +211,81 @@ struct Builder {
             content_height = std::max(0.0, resolveLength(*height_value,
                 containing_height, font_size, root_font_size, content_height));
         }
+        if (box.display == "flex") {
+            const bool row_direction = !style || !style->get("flex-direction") ||
+                *style->get("flex-direction") == "row" ||
+                *style->get("flex-direction") == "row-reverse";
+            const bool reverse = style && style->get("flex-direction") &&
+                (*style->get("flex-direction") == "row-reverse" ||
+                 *style->get("flex-direction") == "column-reverse");
+            const double gap = std::max(0.0,
+                propertyLength(style, "gap", containing_width, font_size, root_font_size));
+            const std::string justify = style && style->get("justify-content")
+                ? *style->get("justify-content") : "flex-start";
+            const std::string align = style && style->get("align-items")
+                ? *style->get("align-items") : "stretch";
+
+            if (row_direction) {
+                double used = gap * (box.children.empty() ? 0.0 :
+                    static_cast<double>(box.children.size() - 1));
+                double cross_size = 0.0;
+                for (auto& child : box.children) {
+                    if (child.element) {
+                        const auto* child_style = styleFor(*child.element);
+                        const auto explicit_width = child_style
+                            ? child_style->length("width") : std::nullopt;
+                        if (!explicit_width || explicit_width->unit == css::LengthUnit::Auto) {
+                            const double child_font = std::max(1.0,
+                                propertyLength(child_style, "font-size", box.width,
+                                               font_size, root_font_size, font_size));
+                            const double text_width = static_cast<double>(
+                                child.element->textContent().size()) * child_font * 0.5;
+                            child.width = std::min(box.width, text_width +
+                                child.padding_left + child.padding_right +
+                                child.border_left + child.border_right);
+                        }
+                    }
+                    used += child.width + child.margin_left + child.margin_right;
+                    cross_size = std::max(cross_size,
+                        child.height + child.margin_top + child.margin_bottom);
+                }
+                double offset = 0.0;
+                double distributed_gap = gap;
+                if (justify == "center") offset = std::max(0.0, (box.width - used) / 2.0);
+                else if (justify == "flex-end") offset = std::max(0.0, box.width - used);
+                else if (justify == "space-between" && box.children.size() > 1)
+                    distributed_gap = std::max(gap,
+                        (box.width - (used - gap * static_cast<double>(box.children.size() - 1))) /
+                        static_cast<double>(box.children.size() - 1));
+
+                double cursor_x = box.x + offset;
+                for (std::size_t index = 0; index < box.children.size(); ++index) {
+                    auto& child = box.children[reverse ? box.children.size() - 1 - index : index];
+                    double child_y = box.y + child.margin_top;
+                    if (align == "center")
+                        child_y += std::max(0.0, (cross_size - child.height) / 2.0);
+                    else if (align == "flex-end")
+                        child_y += std::max(0.0, cross_size - child.height);
+                    const double target_x = cursor_x + child.margin_left;
+                    translate(child, target_x - child.x, child_y - child.y);
+                    cursor_x += child.margin_left + child.width + child.margin_right +
+                        distributed_gap;
+                }
+                content_height = std::max(content_height, cross_size);
+            } else {
+                double cursor = box.y;
+                if (reverse) std::reverse(box.children.begin(), box.children.end());
+                for (auto& child : box.children) {
+                    const double target_y = cursor + child.margin_top;
+                    translate(child, box.x + child.margin_left - child.x,
+                              target_y - child.y);
+                    cursor += child.margin_top + child.height + child.margin_bottom + gap;
+                }
+                if (!box.children.empty()) cursor -= gap;
+                content_height = std::max(content_height, cursor - box.y);
+            }
+        }
+
         box.height = content_height;
         return box;
     }
