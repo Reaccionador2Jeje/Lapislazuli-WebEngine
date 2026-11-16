@@ -53,6 +53,17 @@ int main() {
     assert(parsed->textContent() == "Hi");
     assert(parsed->serialize() == "<html><body><!--note--><p>Hi</p><br></body></html>");
 
+    const auto rich = parser.parse(
+        "<!doctype html><div id='main' data-kind=primary title=\\"A &amp; B\\">"
+        "<p class='one'>A &lt; B &amp; C</p><p>Second</p></div>");
+    const auto* main = rich->getElementById("main");
+    assert(main != nullptr);
+    assert(main->getAttribute("data-kind") != nullptr);
+    assert(*main->getAttribute("data-kind") == "primary");
+    assert(*main->getAttribute("title") == "A & B");
+    assert(rich->getElementsByTagName("p").size() == 2);
+    assert(rich->textContent() == "A < B & CSecond");
+
     assert(parsed->getElementsByTagName("*").size() == 4);
     assert(parsed->documentElement()->type() == NodeType::Element);
 
