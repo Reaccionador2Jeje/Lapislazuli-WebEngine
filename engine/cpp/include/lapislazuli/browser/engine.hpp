@@ -3,6 +3,7 @@
 #include "lapislazuli/css/css_engine.hpp"
 #include "lapislazuli/dom.hpp"
 #include "lapislazuli/net/http_client.hpp"
+#include "lapislazuli/security/origin.hpp"
 
 #include <map>
 #include <memory>
@@ -42,6 +43,7 @@ struct NavigationResult {
     std::string requestedUrl;
     std::string finalUrl;
     std::string contentType;
+    security::Origin origin;
     bool redirected = false;
     std::unique_ptr<dom::Document> document;
     ScriptExecutionReport scripts;
