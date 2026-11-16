@@ -28,7 +28,7 @@ int main() {
     assert(document.getElementsByTagName("p").size() == 1);
     assert(root.textContent() == "Hello <web>");
     assert(root.serialize() ==
-        "<html id=\"main\" lang=\"en\"><body id=\"main\"><p>Hello &lt;web&gt;</p></body></html>");
+        "<body id=\"main\"><p>Hello &lt;web&gt;</p></body>");
 
     auto* bodyNode = document.getElementById("main");
     assert(bodyNode != nullptr && bodyNode->parent() == &root);
