@@ -33,7 +33,9 @@ The project is being developed with a combination of **C++ and Rust**. Planned s
 
 ## Current status
 
-**Milestone 0.8 — modular HTTP transport with HTTPS-first security policy.**
+**Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
+
+### Existing experimental modules
 
 The C++ CSS module currently provides:
 
@@ -85,13 +87,52 @@ Example:
         // The response body can be passed to a later HTML integration layer.
     }
 
-This is an initial transport layer, not a complete browser networking stack. It does not yet implement an origin/security model, DNS rebinding defenses, a complete WHATWG URL parser, cookies, cache, proxy configuration, certificate pinning, HSTS, CSP, service workers, streaming APIs, cancellation, or guaranteed HTTP/2 and HTTP/3 support. URL checks are deliberately limited and must be combined with robust URL parsing and address-resolution policy before untrusted arbitrary navigation is exposed. The allowInsecureHttp option is for controlled development/testing only. Responses are not automatically parsed as HTML and scripts are never executed by the transport layer.
+This is an initial transport layer, not a complete browser networking stack. It does not yet implement a complete WHATWG URL parser, DNS rebinding defenses, cookies, cache, proxy configuration, certificate pinning, HSTS, CSP, service workers, streaming APIs, cancellation, or guaranteed HTTP/2 and HTTP/3 support. URL checks are deliberately limited and must be combined with robust URL parsing and address-resolution policy before untrusted arbitrary navigation is exposed. The allowInsecureHttp option is for controlled development/testing only.
+
+## Persistent storage (0.9)
+
+The lapislazuli_storage module provides a persistent, SQLite-backed key/value area partitioned by an origin identifier:
+
+- getItem, setItem, removeItem, clear, key, length, and usageBytes.
+- Per-area configurable byte quota, with transactional quota checks.
+- Persistent data across StorageArea instances and process restarts when they use the same database path and origin identifier.
+- Separate origin namespaces in the same database.
+- Parameterized SQL statements, SQLite busy timeout, and WAL journal mode.
+- Empty keys and values are supported; values are accounted for as UTF-8 byte sequences supplied by the embedder.
+
+The embedder must provide a canonical, trusted origin identifier derived from its URL/security layer. StorageArea treats this identifier as an opaque partition key; it does not parse URLs, decide same-origin policy, or establish a security boundary. The current API is a native storage primitive, not a JavaScript localStorage implementation. Storage encryption, eviction policy, private-browsing lifecycle, cross-process quota coordination, and browser privacy controls are not implemented yet.
+
+Example:
+
+    #include "lapislazuli/storage/storage_area.hpp"
+
+    lapislazuli::storage::StorageArea storage(
+        "profile/lapislazuli.sqlite", "https://example.com");
+    storage.setItem("theme", "dark");
+    const auto theme = storage.getItem("theme");
+
+## Browser integration facade (0.9)
+
+The lapislazuli_browser target exposes a small C++ integration point:
+
+    #include "lapislazuli/browser/engine.hpp"
+
+    lapislazuli::browser::Engine engine;
+    lapislazuli::browser::NavigationRequest request;
+    request.url = "https://example.com/";
+    const auto page = engine.navigate(request);
+
+The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, and parses the response body with the current experimental DocumentParser. The result includes the HTTP status, requested and final URL, content type, redirect flag, and a DOM document.
+
+This is an initial integration seam, not a production browser navigation implementation. It does not yet resolve relative subresources, apply CSS, execute document scripts, render pixels, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser currently has significant HTML compatibility limitations, including incomplete attribute handling. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
 
 ## Build
 
-Requirements: CMake 3.20+, a C++20 compiler, and libcurl development files.
+Requirements: CMake 3.20+, a C++20 compiler, libcurl development files, and SQLite 3 development files.
 
-    sudo apt-get install libcurl4-openssl-dev
+Ubuntu/Debian:
+
+    sudo apt-get install libcurl4-openssl-dev libsqlite3-dev
     cmake -S . -B build
     cmake --build build
     ctest --test-dir build --output-on-failure
@@ -115,7 +156,7 @@ Requirements: Rust and Cargo.
 | 0.6 | Initial layout tree and block-flow foundation |
 | 0.7 | Experimental JavaScript runtime and DOM bridge |
 | 0.8 | HTTP transport, HTTPS defaults, and network security foundations |
-| 0.9 | Storage and external browser integrations |
+| 0.9 | Persistent origin-partitioned storage and browser integration facade |
 | 1.0 | Stable, documented engine release |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
