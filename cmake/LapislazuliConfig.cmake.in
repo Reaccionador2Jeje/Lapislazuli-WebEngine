@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(CURL)
+find_dependency(SQLite3)
+
+include("${CMAKE_CURRENT_LIST_DIR}/LapislazuliTargets.cmake")
+check_required_components(Lapislazuli)
