@@ -7,10 +7,12 @@
 #include <unordered_map>
 #include <vector>
 namespace lapislazuli::css {
-enum class TokenType { Ident, Hash, String, Whitespace, Dot, Colon, Comma, Greater, OpenBrace, CloseBrace, Semicolon, Bang, Delim, End };
+enum class TokenType { Ident, Hash, String, Whitespace, Dot, Colon, Comma, Greater, OpenBrace, CloseBrace, Semicolon, Bang, SquareOpen, SquareClose, Equals, Delim, End };
 struct Token { TokenType type; std::string text; std::size_t offset=0; };
 class Tokenizer { public: [[nodiscard]] std::vector<Token> tokenize(std::string_view) const; };
-struct SimpleSelector { std::string tag; std::string id; std::vector<std::string> classes; };
+enum class AttributeMatch { Exists, Exact };
+struct AttributeSelector { std::string name; std::string value; AttributeMatch match = AttributeMatch::Exists; };
+struct SimpleSelector { std::string tag; std::string id; std::vector<std::string> classes; std::vector<AttributeSelector> attributes; };
 enum class Combinator { Descendant, Child };
 struct Selector { std::vector<SimpleSelector> parts; std::vector<Combinator> combinators; [[nodiscard]] bool matches(const dom::Element&) const; [[nodiscard]] unsigned specificity() const noexcept; };
 struct Declaration { std::string property; std::string value; bool important=false; };
