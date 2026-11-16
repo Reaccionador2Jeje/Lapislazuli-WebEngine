@@ -72,7 +72,7 @@ Requirements: Rust and Cargo.
 | 0.3 | HTML attributes, entities, and parser improvements |
 | 0.4 | CSS parsing, selectors, and initial cascade |
 | 0.5 | CSS values, inheritance, and box-model foundation |
-| 0.6 | Layout and rendering pipeline |
+| 0.6 | Initial layout tree and block-flow foundation |
 | 0.7 | JavaScript integration |
 | 0.8 | Networking and secure transport |
 | 0.9 | Storage and external browser integrations |
