@@ -28,6 +28,29 @@ void skipSpace(std::string_view input, std::size_t& position) {
     while (position < input.size() && isSpace(input[position])) ++position;
 }
 
+bool isRawTextElement(std::string_view name) {
+    return name == "script" || name == "style" || name == "textarea" || name == "title";
+}
+
+std::size_t findRawTextEnd(std::string_view input, std::string_view tag, std::size_t start) {
+    for (std::size_t i = start; i + tag.size() + 2 <= input.size(); ++i) {
+        if (input[i] != '<' || input[i + 1] != '/') continue;
+        bool matches = true;
+        for (std::size_t j = 0; j < tag.size(); ++j) {
+            const auto ch = static_cast<unsigned char>(input[i + 2 + j]);
+            if (static_cast<char>(std::tolower(ch)) != tag[j]) {
+                matches = false;
+                break;
+            }
+        }
+        if (!matches) continue;
+        const auto after = i + 2 + tag.size();
+        if (after == input.size() || isSpace(input[after]) || input[after] == '>' ||
+            input[after] == '/') return i;
+    }
+    return std::string_view::npos;
+}
+
 } // namespace
 
 std::vector<Token> Tokenizer::tokenize(std::string_view input) const {
@@ -150,8 +173,22 @@ std::vector<Token> Tokenizer::tokenize(std::string_view input) const {
             token.attributes.try_emplace(std::move(attributeName), std::move(attributeValue));
         }
 
+        const bool consumeRawText = !token.self_closing && isRawTextElement(token.name);
+        const std::string rawTagName = token.name;
         tokens.push_back(std::move(token));
         cursor = position;
+
+        // Script/style and RCDATA elements consume their contents as text until
+        // their matching end tag; '<' inside JavaScript must not become markup.
+        if (consumeRawText && cursor < input.size()) {
+            const auto rawEnd = findRawTextEnd(input, rawTagName, cursor);
+            const auto textEnd = rawEnd == std::string_view::npos ? input.size() : rawEnd;
+            if (textEnd > cursor) {
+                tokens.push_back({TokenType::Text, {},
+                    std::string(input.substr(cursor, textEnd - cursor))});
+            }
+            cursor = textEnd;
+        }
     }
 
     return tokens;
