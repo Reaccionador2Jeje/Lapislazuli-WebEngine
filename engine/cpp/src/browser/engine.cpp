@@ -337,7 +337,8 @@ NavigationResult Engine::navigate(const NavigationRequest& request) const {
     NavigationResult result;
     result.statusCode = response.statusCode;
     result.requestedUrl = request.url;
-    result.finalUrl = response.effectiveUrl;
+    result.finalUrl = response.effectiveUrl.empty() ? request.url : response.effectiveUrl;
+    result.origin = security::Origin::fromUrl(result.finalUrl);
     result.contentType = response.contentType;
     result.redirected = response.redirected;
     result.document = parser.parse(response.body);
