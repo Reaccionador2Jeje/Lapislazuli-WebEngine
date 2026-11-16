@@ -110,6 +110,11 @@ struct StorageArea::Impl {
 StorageArea::StorageArea(std::string databasePath, std::string origin, StorageConfig config)
     : impl_(std::make_unique<Impl>(std::move(databasePath), std::move(origin), config)) {}
 
+StorageArea::StorageArea(std::string databasePath, const security::Origin& origin,
+                         StorageConfig config)
+    : StorageArea(std::move(databasePath),
+                  origin.valid() ? origin.serialize() : std::string{}, config) {}
+
 StorageArea::~StorageArea() = default;
 
 std::optional<std::string> StorageArea::getItem(std::string_view keyValue) const {
