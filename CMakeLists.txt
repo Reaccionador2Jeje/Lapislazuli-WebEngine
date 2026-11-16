@@ -46,7 +46,7 @@ target_link_libraries(lapislazuli_net PUBLIC CURL::libcurl)
 
 add_library(lapislazuli_storage engine/cpp/src/storage/storage_area.cpp)
 lapislazuli_configure_target(lapislazuli_storage storage)
-target_link_libraries(lapislazuli_storage PUBLIC SQLite::SQLite3)
+target_link_libraries(lapislazuli_storage PUBLIC SQLite3::SQLite3)
 
 add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp)
 lapislazuli_configure_target(lapislazuli_browser browser)
