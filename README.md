@@ -81,7 +81,7 @@ The HTML, CSS, and layout modules now have additional tested behavior:
 ### Layout
 
 - Initial flex container layout for row and column directions.
-- Basic main-axis start/center/end/space-between distribution.
+- Basic row main-axis start/center/end/space-between distribution; column containers currently use sequential placement with gap.
 - Initial cross-axis start/center/end alignment.
 - Basic gap spacing and reverse-direction ordering.
 
