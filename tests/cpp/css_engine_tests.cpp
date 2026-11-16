@@ -2,6 +2,7 @@
 #include "lapislazuli/dom.hpp"
 #include <cassert>
 #include <iostream>
+#include <utility>
 #include <vector>
 int main() {
  using namespace lapislazuli;
