@@ -121,7 +121,10 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
             case TokenType::Text: {
                 if (token.data.empty()) break;
                 if (openElements.back() == document.get() && isWhitespaceOnly(token.data)) break;
-                openElements.back()->appendChild(document->createTextNode(decodeEntities(token.data)));
+                const auto& parentName = openElements.back()->name();
+                const bool rawText = parentName == "script" || parentName == "style";
+                const auto text = rawText ? token.data : decodeEntities(token.data);
+                openElements.back()->appendChild(document->createTextNode(text));
                 break;
             }
             case TokenType::Comment:
