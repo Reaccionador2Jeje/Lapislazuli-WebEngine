@@ -59,6 +59,35 @@ The package declares libcurl and SQLite as dependencies. CI now installs the SDK
 
 The runtime API is intentionally small at this stage. It does not yet promise ABI stability, shared-library distribution, a complete browser lifecycle, or full web-platform compatibility. Those are separate release criteria for the eventual 1.0.
 
+## 1.0 architecture work — Stage 2: Web Standards foundations
+
+The HTML, CSS, and layout modules now have additional tested behavior:
+
+### HTML tokenizer and parser
+
+- Start-tag attribute parsing for single-quoted, double-quoted, and unquoted values.
+- Boolean attributes and first-duplicate-wins handling.
+- Self-closing syntax recognition and void-element handling.
+- Comments and declaration skipping.
+- Common named character references (`amp`, `lt`, `gt`, `quot`, `apos`) and decimal/hex numeric references in text and attribute values.
+- Basic recovery for nested paragraphs and list items.
+
+### CSS selectors
+
+- Attribute-presence selectors such as `[disabled]`.
+- Exact attribute-value selectors such as `[data-kind="primary"]`.
+- Attribute selectors contribute to selector specificity.
+
+### Layout
+
+- Initial flex container layout for row and column directions.
+- Basic main-axis start/center/end/space-between distribution.
+- Initial cross-axis start/center/end alignment.
+- Basic gap spacing and reverse-direction ordering.
+
+These are deliberately limited foundations, not full HTML5 parsing, complete CSS selector support, or a standards-complete Flexbox implementation. The parser does not yet implement the full WHATWG tree-construction algorithm, all character references, raw-text/RCDATA states, foster parenting, or automatic document structure synthesis. CSS attribute matching currently supports presence and exact-value operators only; pseudo-classes and the remaining attribute operators are not implemented. Flex sizing, wrapping, flex-grow/shrink/basis, min/max constraints, and the full alignment specification remain future work.
+
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -152,7 +181,7 @@ The lapislazuli_browser target exposes a small C++ integration point:
 
 The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, and parses the response body with the current experimental DocumentParser. The result includes the HTTP status, requested and final URL, content type, redirect flag, and a DOM document.
 
-This is an initial integration seam, not a production browser navigation implementation. It does not yet resolve relative subresources, apply CSS, execute document scripts, render pixels, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser currently has significant HTML compatibility limitations, including incomplete attribute handling. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
+This is an initial integration seam, not a production browser navigation implementation. It does not yet resolve relative subresources, apply CSS, execute document scripts, render pixels, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser supports a growing subset of HTML attributes and character references, but still does not implement the full WHATWG parsing algorithm. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
 
 ## Build
 
@@ -185,7 +214,7 @@ Requirements: Rust and Cargo.
 | 0.7 | Experimental JavaScript runtime and DOM bridge |
 | 0.8 | HTTP transport, HTTPS defaults, and network security foundations |
 | 0.9 | Persistent origin-partitioned storage and browser integration facade |
-| 1.0 preparation | Core runtime, public SDK package, integration contracts, and release validation |\n| 1.0 | Stable, documented engine release after all acceptance criteria pass |
+| 1.0 preparation | Core runtime, public SDK package, integration contracts, and release validation |\n| 1.0 preparation — Stage 2 | HTML attributes/entities, CSS attribute selectors, and initial flex layout |\n| 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
 
