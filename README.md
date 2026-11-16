@@ -33,7 +33,7 @@ The project is being developed with a combination of **C++ and Rust**. Planned s
 
 ## Current status
 
-**Milestone 0.7 — experimental JavaScript runtime and initial DOM bridge.**
+**Milestone 0.8 — modular HTTP transport with HTTPS-first security policy.**
 
 The C++ CSS module currently provides:
 
@@ -57,10 +57,41 @@ Example:
 
 This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is read-only, and HTML script elements are not executed automatically. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
 
+## Networking (0.8)
+
+The C++ networking module (lapislazuli_net) uses libcurl as a transport backend and exposes a browser-engine-facing API without exposing libcurl types. It currently provides:
+
+- GET, HEAD, POST, PUT, PATCH, and DELETE requests.
+- HTTPS-only requests by default; plaintext HTTP requires explicit opt-in.
+- TLS peer and hostname verification enabled by default, with TLS 1.2 as the minimum.
+- HTTPS-only redirect policy by default and a configurable redirect limit.
+- Connection and total request timeouts.
+- A configurable maximum response-body size.
+- Response status, normalized response headers, content type, effective URL, redirect metadata, and body.
+- Request-header validation that rejects CR/LF injection.
+- Basic URL policy checks that reject non-HTTPS schemes and embedded user-info.
+- Automatic response decompression through libcurl.
+
+Example:
+
+    #include "lapislazuli/net/http_client.hpp"
+
+    lapislazuli::net::HttpClient client;
+    lapislazuli::net::Request request;
+    request.url = "https://example.com/";
+    const auto response = client.perform(request);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+        // The response body can be passed to a later HTML integration layer.
+    }
+
+This is an initial transport layer, not a complete browser networking stack. It does not yet implement an origin/security model, DNS rebinding defenses, a complete WHATWG URL parser, cookies, cache, proxy configuration, certificate pinning, HSTS, CSP, service workers, streaming APIs, cancellation, or guaranteed HTTP/2 and HTTP/3 support. URL checks are deliberately limited and must be combined with robust URL parsing and address-resolution policy before untrusted arbitrary navigation is exposed. The allowInsecureHttp option is for controlled development/testing only. Responses are not automatically parsed as HTML and scripts are never executed by the transport layer.
+
 ## Build
 
-Requirements: CMake 3.20+ and a C++20 compiler.
+Requirements: CMake 3.20+, a C++20 compiler, and libcurl development files.
 
+    sudo apt-get install libcurl4-openssl-dev
     cmake -S . -B build
     cmake --build build
     ctest --test-dir build --output-on-failure
@@ -83,7 +114,7 @@ Requirements: Rust and Cargo.
 | 0.5 | CSS values, inheritance, and box-model foundation |
 | 0.6 | Initial layout tree and block-flow foundation |
 | 0.7 | Experimental JavaScript runtime and DOM bridge |
-| 0.8 | Networking and secure transport |
+| 0.8 | HTTP transport, HTTPS defaults, and network security foundations |
 | 0.9 | Storage and external browser integrations |
 | 1.0 | Stable, documented engine release |
 
