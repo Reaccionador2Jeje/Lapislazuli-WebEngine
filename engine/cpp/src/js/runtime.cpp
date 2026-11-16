@@ -341,11 +341,47 @@ void Runtime::setOutput(OutputFunction output) {
     output_ = std::move(output);
 }
 
-void Runtime::bindDocument(const dom::Document& document) {
+void Runtime::bindDocument(dom::Document& document) {
     registerFunction("getElementText", [&document](const std::vector<Value>& args) {
         if (args.empty()) return Value(Null{});
         const auto* element = document.getElementById(args.front().toString());
         return element ? Value(element->textContent()) : Value(Null{});
+    });
+    registerFunction("setElementText", [&document](const std::vector<Value>& args) {
+        if (args.size() < 2) throw std::runtime_error("setElementText requires an id and text");
+        auto* element = document.getElementById(args[0].toString());
+        if (!element) return Value(false);
+        element->setTextContent(args[1].toString());
+        return Value(true);
+    });
+    registerFunction("setElementAttribute", [&document](const std::vector<Value>& args) {
+        if (args.size() < 3)
+            throw std::runtime_error("setElementAttribute requires an id, name, and value");
+        auto* element = document.getElementById(args[0].toString());
+        if (!element) return Value(false);
+        element->setAttribute(args[1].toString(), args[2].toString());
+        return Value(true);
+    });
+    registerFunction("getElementAttribute", [&document](const std::vector<Value>& args) {
+        if (args.size() < 2) return Value(Null{});
+        const auto* element = document.getElementById(args[0].toString());
+        if (!element) return Value(Null{});
+        const auto* value = element->getAttribute(args[1].toString());
+        return value ? Value(*value) : Value(Null{});
+    });
+    registerFunction("removeElementAttribute", [&document](const std::vector<Value>& args) {
+        if (args.size() < 2) throw std::runtime_error("removeElementAttribute requires an id and name");
+        auto* element = document.getElementById(args[0].toString());
+        return Value(element && element->removeAttribute(args[1].toString()));
+    });
+    registerFunction("clickElement", [this, &document](const std::vector<Value>& args) {
+        if (args.empty()) throw std::runtime_error("clickElement requires an element id");
+        const auto* element = document.getElementById(args.front().toString());
+        if (!element) return Value(false);
+        const auto* handler = element->getAttribute("onclick");
+        if (!handler || handler->empty()) return Value(false);
+        (void)execute(*handler);
+        return Value(true);
     });
 }
 
