@@ -77,7 +77,7 @@ std::string decodeEntities(std::string_view input) {
             } else {
                 char* end = nullptr;
                 const auto value = std::strtoul(digits.c_str(), &end, base);
-                if (end == digits.c_str() || *end != '\\0')
+                if (end == digits.c_str() || *end != 0)
                     output.append(input.substr(i, semicolon - i + 1));
                 else appendUtf8(output, value);
             }
