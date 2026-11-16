@@ -33,7 +33,7 @@ The project is being developed with a combination of **C++ and Rust**. Planned s
 
 ## Current status
 
-**Milestone 0.6 — initial layout tree and block-flow foundation.**
+**Milestone 0.7 — experimental JavaScript runtime and initial DOM bridge.**
 
 The C++ CSS module currently provides:
 
@@ -46,7 +46,16 @@ The C++ CSS module currently provides:
 - Initial margin and padding shorthand expansion.
 - A queryable box-model structure for width, height, margins, padding, borders, and box-sizing.
 
-The initial C++ layout module now builds a layout tree from the DOM and computed CSS styles. It supports a viewport, basic HTML block defaults, vertical block flow, simple inline text estimates, width and height sizing, margins, padding, borders, box-sizing, and basic px, percentage, em, and rem resolution. It is an experimental approximation: inline formatting, line breaking, margin collapsing, intrinsic sizing, positioning, flex/grid/table layout, replaced elements, font metrics, painting, and browser-grade layout are not implemented. Percentage heights are only meaningful when a containing height is available.
+The C++ JavaScript module introduces a small interpreter-like runtime with let, const, and var declarations (stored in a shared global environment), boolean/null/undefined/numeric/string values, arithmetic and comparison operators, logical operators, parenthesized and unary expressions, registered host functions, built-in print, String, Number, and Boolean functions, an output callback, and a read-only DOM bridge through getElementText(id).
+
+Example:
+
+    let price = 12;
+    let quantity = 3;
+    let total = price * quantity;
+    print('Total:', total);
+
+This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is read-only, and HTML script elements are not executed automatically. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
 
 ## Build
 
@@ -73,7 +82,7 @@ Requirements: Rust and Cargo.
 | 0.4 | CSS parsing, selectors, and initial cascade |
 | 0.5 | CSS values, inheritance, and box-model foundation |
 | 0.6 | Initial layout tree and block-flow foundation |
-| 0.7 | JavaScript integration |
+| 0.7 | Experimental JavaScript runtime and DOM bridge |
 | 0.8 | Networking and secure transport |
 | 0.9 | Storage and external browser integrations |
 | 1.0 | Stable, documented engine release |
