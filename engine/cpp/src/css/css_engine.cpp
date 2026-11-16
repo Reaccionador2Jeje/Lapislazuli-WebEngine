@@ -36,7 +36,7 @@ else if(t[p].type==TokenType::SquareOpen){
   ++p;while(p<end&&t[p].type==TokenType::Whitespace)++p;
   if(p>=end||(t[p].type!=TokenType::Ident&&t[p].type!=TokenType::String&&t[p].type!=TokenType::Hash))return false;
   a.match=AttributeMatch::Exact;a.value=t[p++].text;
-  if(a.value.size()>=2&&((a.value.front()=='"'&&a.value.back()=='"')||(a.value.front()=='\\''&&a.value.back()=='\\'')))a.value=a.value.substr(1,a.value.size()-2);
+  if(a.value.size()>=2&&((a.value.front()=='"'&&a.value.back()=='"')||(a.value.front()==static_cast<char>(39)&&a.value.back()==static_cast<char>(39))))a.value=a.value.substr(1,a.value.size()-2);
   else if(!a.value.empty()&&a.value.front()=='#')a.value.erase(a.value.begin());
  }else if(p<end&&t[p].type!=TokenType::SquareClose)return false;
  while(p<end&&t[p].type==TokenType::Whitespace)++p;
