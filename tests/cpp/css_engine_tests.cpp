@@ -12,13 +12,13 @@ int main(){
  auto*cardPtr=d.getElementById("hero");
  auto sheet=css::Parser{}.parse("body { display:block; color:black } .card { color:blue; padding:12px } #hero { color:red } .page > .card.featured { background:#eeeeee; margin:4px } .card .title, h1 { font-size:20px } .card { color:green !important }");
  assert(sheet.rules().size()==6);
- auto tokens=css::Tokenizer{}.tokenize("#hero.card > h1.title");assert(!tokens.empty());
+ auto tokens=css::Tokenizer{}.tokenize("#hero.card > h1.title");assert(!tokens.empty());\n assert(tokens.front().type==css::TokenType::Hash&&tokens.front().text=="#hero");
  css::StyleResolver resolver;std::vector<const css::StyleSheet*> sheets{&sheet};auto style=resolver.compute(*cardPtr,sheets);
  assert(style.get("color")&&*style.get("color")=="green");
  assert(style.get("padding")&&*style.get("padding")=="12px");
  assert(style.get("background")&&*style.get("background")=="#eeeeee");
  assert(style.get("border")&&*style.get("border")=="1px solid black");
- auto tree=resolver.computeTree(d,sheets);assert(tree.size()==3);
+ auto tree=resolver.computeTree(d,sheets);assert(tree.size()==4);
  auto*heading=d.getElementsByTagName("h1").front();
  assert(tree.at(heading).get("font-size")&&*tree.at(heading).get("font-size")=="20px");
  std::cout<<"CSS tokenizer, parser, selector, and cascade tests passed.\n";
