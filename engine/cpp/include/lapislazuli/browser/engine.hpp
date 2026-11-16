@@ -7,12 +7,19 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace lapislazuli::browser {
 
 struct NavigationRequest {
     std::string url;
     std::map<std::string, std::string> headers;
+};
+
+struct ScriptExecutionReport {
+    std::size_t inlineScriptsFound = 0;
+    std::size_t scriptsExecuted = 0;
+    std::vector<std::string> errors;
 };
 
 struct NavigationResult {
@@ -22,6 +29,7 @@ struct NavigationResult {
     std::string contentType;
     bool redirected = false;
     std::unique_ptr<dom::Document> document;
+    ScriptExecutionReport scripts;
 };
 
 class NavigationError : public std::runtime_error {
@@ -35,6 +43,8 @@ class Engine {
 public:
     explicit Engine(net::ClientConfig networkConfig = {});
     [[nodiscard]] NavigationResult navigate(const NavigationRequest& request) const;
+    // Executes supported inline classic scripts in document order. External and module scripts are skipped.
+    [[nodiscard]] ScriptExecutionReport executeInlineScripts(dom::Document& document) const;
 
 private:
     net::HttpClient http_;
