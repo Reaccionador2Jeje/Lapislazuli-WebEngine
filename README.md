@@ -31,77 +31,57 @@ Lapislazuli is not currently a drop-in replacement for mature browser engines. I
 
 The project is being developed with a combination of **C++ and Rust**.
 
-Planned subsystems include:
-
-- HTML tokenization and parsing
-- DOM tree and document APIs
-- CSS parsing, cascade, and layout
-- Rendering and compositing
-- JavaScript integration
-- URL handling and networking
-- HTTPS and certificate validation
-- Cookies and web storage
-- Browser-facing integration APIs
-
-The exact boundaries between components may evolve as the engine develops.
+Planned subsystems include HTML tokenization and parsing, DOM tree and document APIs, CSS tokenization and parsing, selectors and cascade, layout and rendering, JavaScript integration, URL handling and networking, HTTPS, cookies, storage, and browser-facing APIs.
 
 ## Current status
 
-**Milestone 0.3 — experimental HTML parser improvements.**
+**Milestone 0.4 — experimental CSS engine foundation.**
 
-The current C++ implementation includes:
+The C++ CSS module currently provides:
+- CSS tokenization for identifiers, hashes, strings, punctuation, whitespace, and comments.
+- Stylesheet parsing and declaration extraction.
+- Basic type, class, ID, compound, descendant, and child selectors.
+- Selector specificity and comma-separated selector lists.
+- Initial cascade ordering, !important, and inline style declarations.
+- Computed-style lookup for individual elements and whole DOM trees.
 
-- A basic HTML tokenizer.
-- An owned DOM tree with document, element, text, and comment nodes.
-- Parent/child relationships with safe ownership transfer.
-- Element attributes and basic lookup by ID and tag name.
-- Text-content extraction and HTML serialization.
-- A minimal document builder using the experimental tokenizer.
-- C++ test targets for tokenizer and DOM behavior.
-
-The tokenizer now parses quoted, unquoted, and boolean attributes and respects greater-than characters inside quoted values. The parser builds DOM attributes and decodes a small set of named and numeric character references. It does not yet implement the complete WHATWG named-reference table, the full tree-construction algorithm, raw-text/RCDATA states, or browser-grade error recovery. Unknown named references remain literal. The self-closing flag is ignored on ordinary HTML elements, as required by HTML syntax. The URL parser remains a prototype and is not WHATWG-compliant or a security boundary.
+This is an intentionally small CSS subset, not a complete CSS Syntax or Selectors specification implementation. Pseudo-classes, attribute selectors, namespaces, custom-property substitution, inheritance, shorthand expansion, media queries, and the full cascade/layer model are not implemented. Computed values are retained as strings; this milestone does not perform layout or paint.
 
 ## Build
 
 Requirements: CMake 3.20+ and a C++20 compiler.
 
-```sh
-cmake -S . -B build
-cmake --build build
-ctest --test-dir build --output-on-failure
-```
+    cmake -S . -B build
+    cmake --build build
+    ctest --test-dir build --output-on-failure
 
 ### Rust components
 
 Requirements: Rust and Cargo.
 
-```sh
-cd engine/rust
-cargo test --workspace
-```
+    cd engine/rust
+    cargo test --workspace
 
 ## Roadmap
-
-The roadmap is directional and may change as technical work progresses.
 
 | Milestone | Focus |
 | --- | --- |
 | 0.1 | Core foundation and HTML tokenizer |
 | 0.2 | HTML parser and DOM foundation |
 | 0.3 | HTML attributes, entities, and parser improvements |
-| 0.4 | CSS parsing, cascade, and initial layout |
-| 0.5 | Rendering pipeline |
-| 0.6 | JavaScript integration |
-| 0.7 | Networking and secure transport |
-| 0.8 | Cookies, storage, and browser integration APIs |
-| 0.9 | First external browser integrations and compatibility work |
+| 0.4 | CSS parsing, selectors, and initial cascade |
+| 0.5 | CSS values, inheritance, and box-model layout |
+| 0.6 | Rendering pipeline |
+| 0.7 | JavaScript integration |
+| 0.8 | Networking and secure transport |
+| 0.9 | Storage and external browser integrations |
 | 1.0 | Stable, documented engine release |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
 
 ## Contributing
 
-Contributions, bug reports, architecture discussions, and documentation improvements are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the project workflow.
+Contributions, bug reports, architecture discussions, and documentation improvements are welcome. See CONTRIBUTING.md for the project workflow.
 
 When reporting a compatibility issue, include a minimal HTML/CSS/JS example, expected behavior, actual behavior, and your build environment where possible.
 
@@ -113,4 +93,4 @@ The goal is not to promise an instant replacement for existing engines. The goal
 
 ## License
 
-Lapislazuli WebEngine is distributed under the MIT License. See [LICENSE](LICENSE).
+Lapislazuli WebEngine is distributed under the MIT License. See LICENSE.
