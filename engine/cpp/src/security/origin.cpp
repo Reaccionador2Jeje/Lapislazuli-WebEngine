@@ -60,28 +60,30 @@ bool validIpv6(std::string_view address) {
     if (compression != std::string_view::npos &&
         address.find("::", compression + 2) != std::string_view::npos) return false;
 
-    unsigned groups = 0;
-    std::size_t cursor = 0;
-    while (cursor < address.size()) {
-        if (address[cursor] == ':') {
-            if (cursor == 0 && address.size() > 1 && address[1] == ':') {
-                cursor += 2;
-                continue;
-            }
-            return false;
+    auto countGroups = [](std::string_view side, unsigned& count) {
+        if (side.empty()) return true;
+        std::size_t cursor = 0;
+        while (cursor < side.size()) {
+            const auto end = side.find(':', cursor);
+            const auto group = side.substr(cursor,
+                (end == std::string_view::npos ? side.size() : end) - cursor);
+            if (group.empty() || group.size() > 4) return false;
+            for (unsigned char ch : group) if (!std::isxdigit(ch)) return false;
+            ++count;
+            if (end == std::string_view::npos) break;
+            cursor = end + 1;
+            if (cursor == side.size()) return false;
         }
-        const auto end = address.find(':', cursor);
-        const auto group = address.substr(cursor,
-            (end == std::string_view::npos ? address.size() : end) - cursor);
-        if (group.empty() || group.size() > 4) return false;
-        for (unsigned char ch : group) if (!std::isxdigit(ch)) return false;
-        ++groups;
-        if (end == std::string_view::npos) break;
-        cursor = end + 1;
-        if (cursor < address.size() && address[cursor] == ':' &&
-            compression == std::string_view::npos) return false;
+        return true;
+    };
+
+    unsigned groups = 0;
+    if (compression == std::string_view::npos) {
+        return countGroups(address, groups) && groups == 8;
     }
-    return compression == std::string_view::npos ? groups == 8 : groups < 8;
+    const auto left = address.substr(0, compression);
+    const auto right = address.substr(compression + 2);
+    return countGroups(left, groups) && countGroups(right, groups) && groups < 8;
 }
 
 std::uint16_t parsePort(std::string_view text) {
