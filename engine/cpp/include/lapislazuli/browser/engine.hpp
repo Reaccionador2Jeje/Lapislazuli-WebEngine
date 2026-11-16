@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lapislazuli/css/css_engine.hpp"
 #include "lapislazuli/dom.hpp"
 #include "lapislazuli/net/http_client.hpp"
 
@@ -18,8 +19,22 @@ struct NavigationRequest {
 
 struct ScriptExecutionReport {
     std::size_t inlineScriptsFound = 0;
+    std::size_t externalScriptsFound = 0;
     std::size_t scriptsExecuted = 0;
     std::vector<std::string> errors;
+};
+
+enum class ResourceKind { Stylesheet, Image, Script };
+
+struct ResourceResult {
+    ResourceKind kind = ResourceKind::Image;
+    std::string url;
+    long statusCode = 0;
+    std::string contentType;
+    bool loaded = false;
+    std::string error;
+    // Retained for images and fetched resources; stylesheet source is also parsed.
+    std::string body;
 };
 
 struct NavigationResult {
@@ -30,6 +45,8 @@ struct NavigationResult {
     bool redirected = false;
     std::unique_ptr<dom::Document> document;
     ScriptExecutionReport scripts;
+    std::vector<ResourceResult> resources;
+    std::vector<css::StyleSheet> styleSheets;
 };
 
 class NavigationError : public std::runtime_error {
@@ -37,14 +54,14 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-// Small browser-facing facade. It fetches an HTML response and builds the
-// current experimental DOM; it is not yet a complete browser navigation stack.
 class Engine {
 public:
     explicit Engine(net::ClientConfig networkConfig = {});
     [[nodiscard]] NavigationResult navigate(const NavigationRequest& request) const;
-    // Executes supported inline classic scripts in document order. External and module scripts are skipped.
+    // Executes supported classic scripts and loads linked stylesheets and images.
     [[nodiscard]] ScriptExecutionReport executeInlineScripts(dom::Document& document) const;
+    // Resolves an HTTP(S) reference against an absolute HTTP(S) base URL.
+    [[nodiscard]] static std::string resolveUrl(std::string_view base, std::string_view reference);
 
 private:
     net::HttpClient http_;
