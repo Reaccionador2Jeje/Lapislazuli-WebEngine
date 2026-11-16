@@ -47,22 +47,23 @@ The exact boundaries between components may evolve as the engine develops.
 
 ## Current status
 
-**Early prototype — not production-ready.**
+**Milestone 0.2 — experimental DOM foundation.**
 
-The initial foundation includes:
+The current C++ implementation includes:
 
-- A basic C++ HTML tokenizer prototype.
-- A minimal Rust URL parser prototype.
-- Initial CMake and Cargo workspace configuration.
-- Basic C++ and Rust unit-test scaffolding.
+- A basic HTML tokenizer.
+- An owned DOM tree with document, element, text, and comment nodes.
+- Parent/child relationships with safe ownership transfer.
+- Element attributes and basic lookup by ID and tag name.
+- Text-content extraction and HTML serialization.
+- A minimal document builder using the experimental tokenizer.
+- C++ test targets for tokenizer and DOM behavior.
 
-These prototypes intentionally cover only a small subset of web behavior. They are not yet standards-compliant implementations and must not be treated as security boundaries.
+The HTML parser is intentionally limited: it does not yet parse attributes from source markup, decode character references, implement the full HTML parsing algorithm, or provide complete malformed-markup recovery. The URL parser remains a prototype and is not WHATWG-compliant or a security boundary.
 
 ## Build
 
-### C++ components
-
-Requirements: a C++20 compiler and CMake.
+Requirements: CMake 3.20+ and a C++20 compiler.
 
 ```sh
 cmake -S . -B build
@@ -86,13 +87,14 @@ The roadmap is directional and may change as technical work progresses.
 | Milestone | Focus |
 | --- | --- |
 | 0.1 | Core foundation and HTML tokenizer |
-| 0.2 | HTML parser and DOM |
-| 0.3 | CSS parsing, cascade, and initial layout |
-| 0.4 | Rendering pipeline |
-| 0.5 | JavaScript integration |
-| 0.6 | Networking and secure transport |
-| 0.7 | Cookies, storage, and browser integration APIs |
-| 0.8 | First external browser integrations and compatibility work |
+| 0.2 | HTML parser and DOM foundation |
+| 0.3 | HTML attributes, entities, and parser improvements |
+| 0.4 | CSS parsing, cascade, and initial layout |
+| 0.5 | Rendering pipeline |
+| 0.6 | JavaScript integration |
+| 0.7 | Networking and secure transport |
+| 0.8 | Cookies, storage, and browser integration APIs |
+| 0.9 | First external browser integrations and compatibility work |
 | 1.0 | Stable, documented engine release |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
