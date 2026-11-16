@@ -29,7 +29,8 @@ public:
         if (value.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
             throw StorageError("Storage value is too large");
         }
-        check(sqlite3_bind_text(statement_, index, value.data(), static_cast<int>(value.size()), SQLITE_TRANSIENT),
+        const char* data = value.empty() ? "" : value.data();
+        check(sqlite3_bind_text(statement_, index, data, static_cast<int>(value.size()), SQLITE_TRANSIENT),
               db_, "Bind storage text");
     }
 private:
