@@ -13,7 +13,7 @@ struct Token {
     TokenType type;
     std::string name;
     std::string data;
-    std::unordered_map<std::string, std::string> attributes;
+    std::unordered_map<std::string, std::string> attributes = {};
     bool self_closing = false;
 };
 
