@@ -103,6 +103,10 @@ add_executable(document_script_tests tests/cpp/document_script_tests.cpp)
 target_link_libraries(document_script_tests PRIVATE lapislazuli_browser)
 add_test(NAME document_script_tests COMMAND document_script_tests)
 
+add_executable(resource_loader_tests tests/cpp/resource_loader_tests.cpp)
+target_link_libraries(resource_loader_tests PRIVATE lapislazuli_browser)
+add_test(NAME resource_loader_tests COMMAND resource_loader_tests)
+
 add_executable(network_tests tests/cpp/network_tests.cpp)
 target_link_libraries(network_tests PRIVATE lapislazuli_net)
 add_test(NAME network_tests COMMAND network_tests)
