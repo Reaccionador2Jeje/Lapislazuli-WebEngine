@@ -17,5 +17,13 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
       - name: Build
         run: cmake --build build --parallel 2
-      - name: Test
+      - name: Unit tests
         run: ctest --test-dir build --output-on-failure
+      - name: Install SDK package
+        run: cmake --install build --prefix "$RUNNER_TEMP/lapislazuli-install"
+      - name: Configure downstream browser consumer
+        run: cmake -S tests/cmake/consumer -B consumer-build -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/lapislazuli-install"
+      - name: Build downstream browser consumer
+        run: cmake --build consumer-build --parallel 2
+      - name: Run downstream browser consumer
+        run: ./consumer-build/lapislazuli_consumer
