@@ -17,7 +17,7 @@ int main() {
     assert(Engine::resolveUrl(base, "?v=2") ==
            "https://example.com/a/b/page.html?v=2");
     assert(Engine::resolveUrl(base, "#section") ==
-           "https://example.com/a/b/page.html#section");
+           "https://example.com/a/b/page.html?old=1#section");
     assert(Engine::resolveUrl(base, "") ==
            "https://example.com/a/b/page.html?old=1");
     assert(Engine::resolveUrl(base, "https://static.example.net/x.css") ==
