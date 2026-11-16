@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#include "lapislazuli/security/origin.hpp"
+
 namespace lapislazuli::storage {
 
 class StorageError : public std::runtime_error {
@@ -24,6 +26,8 @@ struct StorageConfig {
 class StorageArea {
 public:
     StorageArea(std::string databasePath, std::string origin, StorageConfig config = {});
+    // Preferred constructor: derives the partition key from a validated tuple origin.
+    StorageArea(std::string databasePath, const security::Origin& origin, StorageConfig config = {});
     ~StorageArea();
 
     StorageArea(const StorageArea&) = delete;
