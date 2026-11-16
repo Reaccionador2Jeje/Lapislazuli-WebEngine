@@ -40,7 +40,7 @@ int main() {
  const auto* heading=d.getElementsByTagName("h1").front();
  assert(tree.at(bodyPtr).get("color")&&*tree.at(bodyPtr).get("color")=="black");
  assert(tree.at(heading).get("font-size")&&*tree.at(heading).get("font-size")=="20px");
- assert(tree.at(heading).get("color")&&*tree.at(heading).get("color")=="black");
+ assert(tree.at(heading).get("color")&&*tree.at(heading).get("color")=="green");
  const auto* sizedPtr=d.getElementsByTagName("section").front();
  const auto& box=tree.at(sizedPtr).boxModel();
  assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);
