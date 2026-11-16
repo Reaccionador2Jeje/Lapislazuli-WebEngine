@@ -55,6 +55,35 @@ bool validDnsHost(std::string_view host) {
     return true;
 }
 
+bool validIpv6(std::string_view address) {
+    const auto compression = address.find("::");
+    if (compression != std::string_view::npos &&
+        address.find("::", compression + 2) != std::string_view::npos) return false;
+
+    unsigned groups = 0;
+    std::size_t cursor = 0;
+    while (cursor < address.size()) {
+        if (address[cursor] == ':') {
+            if (cursor == 0 && address.size() > 1 && address[1] == ':') {
+                cursor += 2;
+                continue;
+            }
+            return false;
+        }
+        const auto end = address.find(':', cursor);
+        const auto group = address.substr(cursor,
+            (end == std::string_view::npos ? address.size() : end) - cursor);
+        if (group.empty() || group.size() > 4) return false;
+        for (unsigned char ch : group) if (!std::isxdigit(ch)) return false;
+        ++groups;
+        if (end == std::string_view::npos) break;
+        cursor = end + 1;
+        if (cursor < address.size() && address[cursor] == ':' &&
+            compression == std::string_view::npos) return false;
+    }
+    return compression == std::string_view::npos ? groups == 8 : groups < 8;
+}
+
 std::uint16_t parsePort(std::string_view text) {
     if (text.empty() || text.size() > 5)
         throw SecurityError("URL port must be between 1 and 65535");
@@ -93,21 +122,18 @@ Origin Origin::fromUrl(std::string_view url) {
 
     std::string host;
     std::string_view portText;
+    bool hasPort = false;
     if (authority.front() == '[') {
         const auto close = authority.find(']');
         if (close == std::string_view::npos)
             throw SecurityError("Malformed bracketed IPv6 host");
         const auto address = authority.substr(1, close - 1);
-        if (address.empty() || address.find(':') == std::string_view::npos)
-            throw SecurityError("Malformed bracketed IPv6 host");
-        for (unsigned char c : address) {
-            if (!(std::isxdigit(c) || c == ':' || c == '.'))
-                throw SecurityError("Unsupported character in IPv6 host");
-        }
+        if (!validIpv6(address)) throw SecurityError("Malformed bracketed IPv6 host");
         host = "[" + lowerAscii(std::string(address)) + "]";
         const auto suffix = authority.substr(close + 1);
         if (!suffix.empty()) {
             if (suffix.front() != ':') throw SecurityError("Malformed URL authority");
+            hasPort = true;
             portText = suffix.substr(1);
         }
     } else {
@@ -115,6 +141,7 @@ Origin Origin::fromUrl(std::string_view url) {
         if (colon != std::string_view::npos) {
             if (authority.find(':') != colon)
                 throw SecurityError("IPv6 URL hosts must use brackets");
+            hasPort = true;
             portText = authority.substr(colon + 1);
             authority = authority.substr(0, colon);
         }
@@ -126,7 +153,8 @@ Origin Origin::fromUrl(std::string_view url) {
     }
 
     const std::uint16_t defaultPort = scheme == "https" ? 443 : 80;
-    const auto port = portText.empty() ? defaultPort : parsePort(portText);
+    if (hasPort && portText.empty()) throw SecurityError("URL port cannot be empty");
+    const auto port = hasPort ? parsePort(portText) : defaultPort;
     return Origin(scheme, std::move(host), port);
 }
 
