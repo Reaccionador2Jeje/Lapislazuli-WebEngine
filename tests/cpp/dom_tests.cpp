@@ -54,7 +54,7 @@ int main() {
     assert(parsed->serialize() == "<html><body><!--note--><p>Hi</p><br></body></html>");
 
     const auto rich = parser.parse(
-        "<!doctype html><div id='main' data-kind=primary title=\\"A &amp; B\\">"
+        "<!doctype html><div id='main' data-kind=primary title='A &amp; B'>"
         "<p class='one'>A &lt; B &amp; C</p><p>Second</p></div>");
     const auto* main = rich->getElementById("main");
     assert(main != nullptr);
