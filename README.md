@@ -33,7 +33,7 @@ The project is being developed with a combination of **C++ and Rust**. Planned s
 
 ## Current status
 
-**Milestone 0.5 — experimental CSS values, inheritance, and box-model foundation.**
+**Milestone 0.6 — initial layout tree and block-flow foundation.**
 
 The C++ CSS module currently provides:
 
@@ -46,7 +46,7 @@ The C++ CSS module currently provides:
 - Initial margin and padding shorthand expansion.
 - A queryable box-model structure for width, height, margins, padding, borders, and box-sizing.
 
-This is not a complete CSS implementation. Percentage and font-relative lengths are parsed but not resolved against layout context. Border shorthand support is limited. There is no layout algorithm, used-value calculation, painting, full property initial-value database, custom-property support, or standards-complete cascade.
+The initial C++ layout module now builds a layout tree from the DOM and computed CSS styles. It supports a viewport, basic HTML block defaults, vertical block flow, simple inline text estimates, width and height sizing, margins, padding, borders, box-sizing, and basic px, percentage, em, and rem resolution. It is an experimental approximation: inline formatting, line breaking, margin collapsing, intrinsic sizing, positioning, flex/grid/table layout, replaced elements, font metrics, painting, and browser-grade layout are not implemented. Percentage heights are only meaningful when a containing height is available.
 
 ## Build
 
