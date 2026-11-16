@@ -163,7 +163,7 @@ std::string serializeNode(const Node& node) {
         result = "<" + node.name();
         const auto& element = static_cast<const Element&>(node);
         for (const auto& [key, value] : element.attributes()) {
-            result += " " + key + "=\\"" + escapeAttribute(value) + "\\"";
+            result += " " + key + "=\"" + escapeAttribute(value) + "\"";
         }
         result += ">";
         if (isVoidElement(node.name())) return result;
