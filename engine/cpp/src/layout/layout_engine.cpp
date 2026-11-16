@@ -68,7 +68,7 @@ struct Builder {
 
     LayoutBox build(const dom::Element& element, double x, double y,
                     double containing_width, double containing_height,
-                    bool has_height_basis) const {
+                    bool has_height_basis, double parent_font_size) const {
         LayoutBox box;
         box.element = &element;
         const auto* style = styleFor(element);
@@ -78,8 +78,8 @@ struct Builder {
         if (box.display == "none") return box;
 
         const double font_size = std::max(1.0,
-            propertyLength(style, "font-size", containing_width, 16.0,
-                           root_font_size, 16.0));
+            propertyLength(style, "font-size", containing_width, parent_font_size,
+                           root_font_size, parent_font_size));
         const double line_height = lineHeight(style, font_size);
 
         box.margin_top = propertyLength(style, "margin-top", containing_width, font_size, root_font_size);
@@ -143,7 +143,7 @@ struct Builder {
 
             const auto& child_element = static_cast<const dom::Element&>(*child);
             auto child_box = build(child_element, box.x, cursor_y,
-                                   box.width, 0.0, false);
+                                   box.width, 0.0, false, font_size);
             if (child_box.display == "none") continue;
 
             if (child_box.display == "inline" && child_box.width >= box.width) {
@@ -170,7 +170,7 @@ struct Builder {
                     inline_height = 0.0;
                 }
                 child_box = build(child_element, box.x, cursor_y,
-                                  box.width, 0.0, false);
+                                  box.width, 0.0, false, font_size);
                 cursor_y += child_box.margin_top + child_box.border_top +
                     child_box.padding_top + child_box.height +
                     child_box.padding_bottom + child_box.border_bottom +
@@ -223,7 +223,7 @@ LayoutResult LayoutEngine::layout(
     const double width = std::max(0.0, viewport.width);
     const double height = std::max(0.0, viewport.height);
     Builder builder{styles, viewport.root_font_size};
-    result.root = builder.build(*root, 0.0, 0.0, width, height, true);
+    result.root = builder.build(*root, 0.0, 0.0, width, height, true, viewport.root_font_size);
     result.document_width = std::max(width, result.root.width +
         result.root.margin_left + result.root.margin_right +
         result.root.padding_left + result.root.padding_right +
