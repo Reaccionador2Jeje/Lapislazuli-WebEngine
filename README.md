@@ -102,6 +102,23 @@ The browser facade now connects the experimental JavaScript runtime to parsed HT
 
 The bridge functions are Lapislazuli host APIs, not standard JavaScript `document` objects or standards-compliant DOM methods. The interpreter still has no function declarations, closures, objects, arrays, promises, event loop, timers, or general-purpose event listener API. There is no JavaScript sandbox or standards-complete browser security model yet; this feature must be treated as experimental and must not be presented as safe for arbitrary hostile pages.
 
+## 1.0 architecture work — Stage 4: Resource System
+
+The browser facade now performs an initial document resource pass after parsing HTML:
+
+- Resolves relative, root-relative, query-only, fragment-only, protocol-relative, and absolute HTTPS resource URLs against the final document URL.
+- Honors the first usable `base[href]` when resolving resources.
+- Loads linked stylesheets from `link[rel~="stylesheet"]` and parses their CSS into `NavigationResult::styleSheets`.
+- Parses inline `style` elements into the same stylesheet collection.
+- Loads `img[src]` resources and retains their response bytes and MIME metadata in the navigation result.
+- Loads external classic JavaScript files in document order and executes them in the same page runtime as inline classic scripts.
+- Checks successful HTTP status codes and expected CSS, image, and JavaScript MIME types.
+- Keeps per-resource status, URL, content type, success state, body, and error information.
+- Applies document-wide resource count and aggregate byte budgets in addition to the HTTP client's per-response limit.
+- Rejects malformed or unsupported URL schemes such as `javascript:` in resource references.
+
+This is an initial resource loader, not a complete browser fetch algorithm. URL resolution is a deliberately limited HTTP(S) resolver rather than a complete WHATWG URL implementation. It does not decode image formats or paint images, and downloaded stylesheets are exposed to the embedder but are not yet wired into a full style/layout/paint lifecycle. `srcset`, responsive image selection, media queries, stylesheet alternate/disabled behavior, script modules, async/defer scheduling, dynamic resource insertion, caching, CSP, and a complete origin/security policy remain future work. External scripts run in the experimental interpreter and must not be considered safe for arbitrary untrusted pages.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -193,9 +210,9 @@ The lapislazuli_browser target exposes a small C++ integration point:
     request.url = "https://example.com/";
     const auto page = engine.navigate(request);
 
-The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, and parses the response body with the current experimental DocumentParser. The result includes the HTTP status, requested and final URL, content type, redirect flag, and a DOM document.
+The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, parses the response body, executes the currently supported inline and external classic scripts, and discovers linked stylesheets and images. The result includes navigation metadata, the DOM, script execution diagnostics, resource records, and parsed stylesheets.
 
-This is an initial integration seam, not a production browser navigation implementation. It does not yet resolve relative subresources, apply CSS, execute document scripts, render pixels, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser supports a growing subset of HTML attributes and character references, but still does not implement the full WHATWG parsing algorithm. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
+This is an initial integration seam, not a production browser navigation implementation. It does not yet render pixels, decode and paint images, wire stylesheet results into a complete style/layout/paint lifecycle, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser supports a growing subset of HTML attributes and character references, but still does not implement the full WHATWG parsing algorithm. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
 
 ## Build
 
