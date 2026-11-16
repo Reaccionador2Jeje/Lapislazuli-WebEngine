@@ -31,6 +31,34 @@ Lapislazuli is not currently a drop-in replacement for mature browser engines. I
 
 The project is being developed with a combination of **C++ and Rust**. Planned subsystems include HTML tokenization and parsing, DOM, CSS, layout and rendering, JavaScript integration, URL handling, networking, HTTPS, cookies, storage, and browser-facing APIs.
 
+## 1.0 architecture work — Stage 1: Core Rebuild
+
+The 1.0 preparation work begins by establishing a public native SDK boundary before expanding the browser features. The current repository remains version 0.9.0 while this foundation is developed and validated.
+
+### Runtime and module registry
+
+The new `lapislazuli_core` target provides:
+
+- Engine and public API version metadata.
+- A discoverable registry of compiled modules.
+- Explicit module maturity labels (`foundation` or `experimental`).
+- Stable module identifiers for embedder capability checks.
+- A public convenience header: `<lapislazuli/lapislazuli.hpp>`.
+- An opt-in symbol visibility macro for future shared-library builds.
+
+The module registry is descriptive metadata. A `foundation` label means the subsystem provides a reusable base API; it is not a certification of security or complete standards compliance. HTML/DOM, CSS, layout, JavaScript, and browser navigation remain experimental.
+
+### Downstream CMake SDK package
+
+CMake now builds an aggregate `Lapislazuli::core` target and exports individual subsystem targets. The install step provides public headers and a relocatable CMake package discoverable through:
+
+    find_package(Lapislazuli CONFIG REQUIRED)
+    target_link_libraries(my_browser PRIVATE Lapislazuli::core)
+
+The package declares libcurl and SQLite as dependencies. CI now installs the SDK into a temporary prefix, configures a separate consumer project with `find_package`, builds it, and runs the consumer executable. This checks that the public package works outside the engine's own build tree.
+
+The runtime API is intentionally small at this stage. It does not yet promise ABI stability, shared-library distribution, a complete browser lifecycle, or full web-platform compatibility. Those are separate release criteria for the eventual 1.0.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -157,7 +185,7 @@ Requirements: Rust and Cargo.
 | 0.7 | Experimental JavaScript runtime and DOM bridge |
 | 0.8 | HTTP transport, HTTPS defaults, and network security foundations |
 | 0.9 | Persistent origin-partitioned storage and browser integration facade |
-| 1.0 | Stable, documented engine release |
+| 1.0 preparation | Core runtime, public SDK package, integration contracts, and release validation |\n| 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
 
