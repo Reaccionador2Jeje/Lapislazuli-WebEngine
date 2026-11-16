@@ -3,6 +3,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
+#include <iterator>
 #include <sstream>
 #include <tuple>
 namespace lapislazuli::css {
