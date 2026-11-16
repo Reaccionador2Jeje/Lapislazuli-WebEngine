@@ -5,7 +5,7 @@
 namespace lapislazuli::core {
 namespace {
 
-constexpr std::array<ModuleDescriptor, 8> kModules{{
+constexpr std::array<ModuleDescriptor, 9> kModules{{
     {"dom", "HTML and DOM", ModuleStatus::Experimental,
      "HTML tokenization, document parsing, and mutable DOM primitives."},
     {"css", "CSS", ModuleStatus::Experimental,
@@ -17,9 +17,11 @@ constexpr std::array<ModuleDescriptor, 8> kModules{{
     {"net", "Networking", ModuleStatus::Foundation,
      "HTTP transport with HTTPS-first defaults, TLS verification, and response limits."},
     {"storage", "Persistent storage", ModuleStatus::Foundation,
-     "SQLite-backed key/value storage partitioned by an embedder-provided origin key."},
+     "SQLite-backed key/value storage partitioned by a canonical HTTP(S) origin."},
+    {"security", "Origin security", ModuleStatus::Foundation,
+     "Constrained canonical tuple-origin parsing and same-origin comparisons for HTTP(S) URLs."},
     {"browser", "Browser integration", ModuleStatus::Experimental,
-     "An initial navigation facade that fetches and parses HTML responses."},
+     "An initial navigation facade with HTML parsing and bounded resource loading."},
     {"core", "Runtime and module registry", ModuleStatus::Foundation,
      "Version metadata and discoverable module capability information."}
 }};
