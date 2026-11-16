@@ -50,7 +50,7 @@ target_link_libraries(lapislazuli_storage PUBLIC SQLite3::SQLite3)
 
 add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp)
 lapislazuli_configure_target(lapislazuli_browser browser)
-target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom)
+target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js)
 
 # Aggregate target for embedders that want the complete native SDK.
 add_library(lapislazuli_core engine/cpp/src/core.cpp)
@@ -98,6 +98,10 @@ add_test(NAME layout_engine_tests COMMAND layout_engine_tests)
 add_executable(js_runtime_tests tests/cpp/js_runtime_tests.cpp)
 target_link_libraries(js_runtime_tests PRIVATE lapislazuli_js)
 add_test(NAME js_runtime_tests COMMAND js_runtime_tests)
+
+add_executable(document_script_tests tests/cpp/document_script_tests.cpp)
+target_link_libraries(document_script_tests PRIVATE lapislazuli_browser)
+add_test(NAME document_script_tests COMMAND document_script_tests)
 
 add_executable(network_tests tests/cpp/network_tests.cpp)
 target_link_libraries(network_tests PRIVATE lapislazuli_net)
