@@ -47,8 +47,8 @@ public:
     void registerFunction(std::string name, NativeFunction function);
     void setOutput(OutputFunction output);
 
-    // Exposes a small, read-only DOM bridge: getElementText(id).
-    void bindDocument(const dom::Document& document);
+    // Exposes a deliberately small mutable DOM bridge to the supported script subset.
+    void bindDocument(dom::Document& document);
 
     // Executes the supported JavaScript subset. Throws std::runtime_error on errors.
     [[nodiscard]] Value execute(std::string_view source);
