@@ -2,55 +2,75 @@
 #include <cctype>
 #include <string>
 #include <utility>
-
 namespace lapislazuli::html {
 namespace {
-bool is_space(char c) {
-    return std::isspace(static_cast<unsigned char>(c)) != 0;
-}
-std::string trim(std::string value) {
-    while (!value.empty() && is_space(value.front())) value.erase(value.begin());
-    while (!value.empty() && is_space(value.back())) value.pop_back();
-    return value;
-}
-} // namespace
-
-std::vector<Token> Tokenizer::tokenize(std::string_view input) const {
-    std::vector<Token> tokens;
-    std::size_t cursor = 0;
-    while (cursor < input.size()) {
-        if (input.substr(cursor, 4) == "<!--") {
-            const auto end = input.find("-->", cursor + 4);
-            const auto content_end = end == std::string_view::npos ? input.size() : end;
-            tokens.push_back({TokenType::Comment, {},
-                std::string(input.substr(cursor + 4, content_end - cursor - 4))});
-            cursor = end == std::string_view::npos ? input.size() : end + 3;
-            continue;
-        }
-        if (input[cursor] == '<') {
-            const auto end = input.find('>', cursor + 1);
-            if (end == std::string_view::npos) {
-                tokens.push_back({TokenType::Text, {}, std::string(input.substr(cursor))});
-                break;
-            }
-            std::string inside = trim(std::string(input.substr(cursor + 1, end - cursor - 1)));
-            const bool closing = !inside.empty() && inside.front() == '/';
-            if (closing) inside.erase(inside.begin());
-            const auto name_end = inside.find_first_of(" \t\r\n/");
-            const std::string name = inside.substr(0, name_end);
-            if (!name.empty()) {
-                tokens.push_back({closing ? TokenType::EndTag : TokenType::StartTag, name, {}});
-            } else {
-                tokens.push_back({TokenType::Text, {}, std::string(input.substr(cursor, end - cursor + 1))});
-            }
-            cursor = end + 1;
-            continue;
-        }
-        const auto end = input.find('<', cursor);
-        const auto text_end = end == std::string_view::npos ? input.size() : end;
-        tokens.push_back({TokenType::Text, {}, std::string(input.substr(cursor, text_end - cursor))});
-        cursor = text_end;
+bool isSpace(char c) { return std::isspace(static_cast<unsigned char>(c)) != 0; }
+bool isNameEnd(char c) { return isSpace(c) || c == '/' || c == '>'; }
+std::size_t findTagEnd(std::string_view s, std::size_t start) {
+    char quote = '\0';
+    for (std::size_t i=start;i<s.size();++i) {
+        char c=s[i];
+        if (quote) { if(c==quote) quote='\0'; }
+        else if(c=='"' || c=='\'') quote=c;
+        else if(c=='>') return i;
     }
-    return tokens;
+    return std::string_view::npos;
+}
+std::string lower(std::string v) {
+    for(char& c:v) c=static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return v;
+}
+void parseAttributes(std::string_view s,std::size_t p,Token& t) {
+    while(p<s.size()) {
+        while(p<s.size() && isSpace(s[p])) ++p;
+        if(p>=s.size()) break;
+        if(s[p]=='/') { t.self_closing=true; ++p; continue; }
+        auto start=p;
+        while(p<s.size() && !isNameEnd(s[p]) && s[p]!='=') ++p;
+        if(p==start) { ++p; continue; }
+        std::string name=lower(std::string(s.substr(start,p-start)));
+        while(p<s.size() && isSpace(s[p])) ++p;
+        std::string value;
+        if(p<s.size() && s[p]=='=') {
+            ++p; while(p<s.size() && isSpace(s[p])) ++p;
+            if(p<s.size() && (s[p]=='"' || s[p]=='\'')) {
+                char q=s[p++]; auto v=p;
+                while(p<s.size() && s[p]!=q) ++p;
+                value=std::string(s.substr(v,p-v)); if(p<s.size()) ++p;
+            } else {
+                auto v=p; while(p<s.size() && !isSpace(s[p])) ++p;
+                value=std::string(s.substr(v,p-v));
+            }
+        }
+        t.attributes.push_back({std::move(name),std::move(value)});
+    }
+}
+}
+std::vector<Token> Tokenizer::tokenize(std::string_view input) const {
+    std::vector<Token> out; std::size_t p=0;
+    while(p<input.size()) {
+        if(input.substr(p,4)=="<!--") {
+            auto e=input.find("-->",p+4); auto ce=e==std::string_view::npos?input.size():e;
+            out.push_back({TokenType::Comment,{},std::string(input.substr(p+4,ce-p-4)),{},false});
+            p=e==std::string_view::npos?input.size():e+3; continue;
+        }
+        if(input[p]=='<') {
+            auto e=findTagEnd(input,p+1);
+            if(e==std::string_view::npos) { out.push_back({TokenType::Text,{},std::string(input.substr(p)),{},false}); break; }
+            auto inside=input.substr(p+1,e-p-1); std::size_t i=0;
+            while(i<inside.size() && isSpace(inside[i])) ++i;
+            if(i<inside.size() && (inside[i]=='!' || inside[i]=='?')) { p=e+1; continue; }
+            bool closing=false;
+            if(i<inside.size() && inside[i]=='/') { closing=true; ++i; while(i<inside.size()&&isSpace(inside[i]))++i; }
+            auto ns=i; while(i<inside.size()&&!isNameEnd(inside[i]))++i;
+            if(i==ns) { out.push_back({TokenType::Text,{},std::string(input.substr(p,e-p+1)),{},false}); p=e+1; continue; }
+            Token t{closing?TokenType::EndTag:TokenType::StartTag,lower(std::string(inside.substr(ns,i-ns))),{}, {},false};
+            if(!closing) parseAttributes(inside,i,t);
+            out.push_back(std::move(t)); p=e+1; continue;
+        }
+        auto e=input.find('<',p); auto te=e==std::string_view::npos?input.size():e;
+        out.push_back({TokenType::Text,{},std::string(input.substr(p,te-p)),{},false}); p=te;
+    }
+    return out;
 }
 } // namespace lapislazuli::html

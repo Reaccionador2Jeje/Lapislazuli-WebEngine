@@ -60,8 +60,8 @@ public:
     explicit Element(std::string tagName);
 
     void setAttribute(std::string name, std::string value);
-    [[nodiscard]] const std::string* getAttribute(std::string_view name) const;
-    [[nodiscard]] bool hasAttribute(std::string_view name) const;
+    [[nodiscard]] const std::string* getAttribute(std::string_view name) const noexcept;
+    [[nodiscard]] bool hasAttribute(std::string_view name) const noexcept;
     [[nodiscard]] bool removeAttribute(std::string_view name);
     [[nodiscard]] const std::unordered_map<std::string, std::string>& attributes() const noexcept {
         return attributes_;
@@ -91,8 +91,8 @@ public:
 
     [[nodiscard]] Element* documentElement() noexcept;
     [[nodiscard]] const Element* documentElement() const noexcept;
-    [[nodiscard]] Element* getElementById(std::string_view id);
-    [[nodiscard]] const Element* getElementById(std::string_view id) const;
+    [[nodiscard]] Element* getElementById(std::string_view id) noexcept;
+    [[nodiscard]] const Element* getElementById(std::string_view id) const noexcept;
     [[nodiscard]] std::vector<Element*> getElementsByTagName(std::string_view tagName);
     [[nodiscard]] std::vector<const Element*> getElementsByTagName(std::string_view tagName) const;
 };

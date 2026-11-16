@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <iterator>
 #include <stdexcept>
 #include <utility>
 
@@ -153,30 +152,28 @@ std::string Node::textContent() const {
     return result;
 }
 
-namespace {
-std::string serializeNode(const Node& node) {
-    if (node.type() == NodeType::Text) return escapeText(node.data());
-    if (node.type() == NodeType::Comment) return "<!--" + node.data() + "-->";
+std::string Node::serialize() const {
+    if (type_ == NodeType::Text) return escapeText(data_);
+    if (type_ == NodeType::Comment) return "<!--" + data_ + "-->";
 
     std::string result;
-    if (node.type() == NodeType::Element) {
-        result = "<" + node.name();
-        const auto& element = static_cast<const Element&>(node);
-        for (const auto& [key, value] : element.attributes()) {
-            result += " " + key + "=\"" + escapeAttribute(value) + "\"";
+    for (const auto& child : children_) {
+        if (child->type_ == NodeType::Element) {
+            result += "<" + child->name_;
+            const auto* element = static_cast<const Element*>(child.get());
+            for (const auto& [key, value] : element->attributes()) {
+                result += " " + key + "=\"" + escapeAttribute(value) + "\"";
+            }
+            result += ">";
+            if (!isVoidElement(child->name_)) {
+                result += child->serialize();
+                result += "</" + child->name_ + ">";
+            }
+        } else {
+            result += child->serialize();
         }
-        result += ">";
-        if (isVoidElement(node.name())) return result;
     }
-
-    for (const auto& child : node.children()) result += serializeNode(*child);
-    if (node.type() == NodeType::Element) result += "</" + node.name() + ">";
     return result;
-}
-} // namespace
-
-std::string Node::serialize() const {
-    return serializeNode(*this);
 }
 
 Element::Element(std::string tagName)
@@ -189,12 +186,12 @@ void Element::setAttribute(std::string name, std::string value) {
     attributes_[lowerAscii(std::move(name))] = std::move(value);
 }
 
-const std::string* Element::getAttribute(std::string_view name) const {
+const std::string* Element::getAttribute(std::string_view name) const noexcept {
     const auto it = attributes_.find(lowerAscii(std::string(name)));
     return it == attributes_.end() ? nullptr : &it->second;
 }
 
-bool Element::hasAttribute(std::string_view name) const {
+bool Element::hasAttribute(std::string_view name) const noexcept {
     return getAttribute(name) != nullptr;
 }
 
@@ -228,8 +225,8 @@ const Element* Document::documentElement() const noexcept {
     }
     return nullptr;
 }
-Element* Document::getElementById(std::string_view id) { return findById(*this, id); }
-const Element* Document::getElementById(std::string_view id) const {
+Element* Document::getElementById(std::string_view id) noexcept { return findById(*this, id); }
+const Element* Document::getElementById(std::string_view id) const noexcept {
     return findById(*this, id);
 }
 std::vector<Element*> Document::getElementsByTagName(std::string_view tagName) {
