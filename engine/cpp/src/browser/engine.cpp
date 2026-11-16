@@ -266,12 +266,19 @@ void processDocumentNode(dom::Node& node, const std::string& baseUrl,
 Engine::Engine(net::ClientConfig networkConfig) : http_(networkConfig) {}
 
 std::string Engine::resolveUrl(std::string_view base, std::string_view reference) {
-    if (base.empty() || reference.empty())
-        throw NavigationError("Base URL and resource reference must be non-empty");
+    if (base.empty())
+        throw NavigationError("Base URL must be non-empty");
     if (reference.find_first_of("\r\n\t ") != std::string_view::npos)
         throw NavigationError("Resource URL contains forbidden whitespace");
 
     net::HttpClient::validateUrl(base);
+    const auto colon = reference.find(':');
+    const auto firstDelimiter = reference.find_first_of("/?#");
+    if (colon != std::string_view::npos &&
+        (firstDelimiter == std::string_view::npos || colon < firstDelimiter) &&
+        reference.find("://") == std::string_view::npos) {
+        throw NavigationError("Resource URL uses an unsupported or malformed scheme");
+    }
     if (reference.find("://") != std::string_view::npos) {
         net::HttpClient::validateUrl(reference);
         return std::string(reference);
