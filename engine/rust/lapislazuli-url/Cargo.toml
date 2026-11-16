@@ -1,0 +1,10 @@
+[package]
+name = "lapislazuli-url"
+version = "0.1.0"
+edition = "2021"
+description = "URL parsing foundation for Lapislazuli WebEngine"
+license = "MIT"
+
+[lib]
+name = "lapislazuli_url"
+path = "src/lib.rs"
