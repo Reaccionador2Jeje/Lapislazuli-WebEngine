@@ -50,5 +50,5 @@ int main() {
  assert(box.height.value==120&&box.height.unit==css::LengthUnit::Px);
  assert(box.margin.left.value==4&&box.margin.right.value==2);
  assert(box.box_sizing=="border-box");
- std::cout << "CSS values, inheritance, box model, and cascade tests passed.\\n";
+ std::cout << "CSS values, inheritance, box model, and cascade tests passed.\n";
 }
