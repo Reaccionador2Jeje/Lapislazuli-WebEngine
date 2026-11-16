@@ -47,7 +47,7 @@ The exact boundaries between components may evolve as the engine develops.
 
 ## Current status
 
-**Milestone 0.2 — experimental DOM foundation.**
+**Milestone 0.3 — experimental HTML parser improvements.**
 
 The current C++ implementation includes:
 
@@ -59,7 +59,7 @@ The current C++ implementation includes:
 - A minimal document builder using the experimental tokenizer.
 - C++ test targets for tokenizer and DOM behavior.
 
-The HTML parser is intentionally limited: it does not yet parse attributes from source markup, decode character references, implement the full HTML parsing algorithm, or provide complete malformed-markup recovery. The URL parser remains a prototype and is not WHATWG-compliant or a security boundary.
+The tokenizer now parses quoted, unquoted, and boolean attributes and respects greater-than characters inside quoted values. The parser builds DOM attributes and decodes a small set of named and numeric character references. It does not yet implement the complete WHATWG named-reference table, the full tree-construction algorithm, raw-text/RCDATA states, or browser-grade error recovery. Unknown named references remain literal. The self-closing flag is ignored on ordinary HTML elements, as required by HTML syntax. The URL parser remains a prototype and is not WHATWG-compliant or a security boundary.
 
 ## Build
 
