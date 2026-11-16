@@ -2,11 +2,20 @@
 #include "lapislazuli/html_tokenizer.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <iterator>
 #include <string>
 #include <vector>
 
 namespace lapislazuli::html {
 namespace {
+
+std::string lowerAscii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
 
 bool isVoidTag(std::string_view name) {
     static constexpr std::string_view tags[] = {
@@ -37,7 +46,8 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
                 break;
             }
             case TokenType::StartTag: {
-                auto element = document->createElement(token.name);
+                if (!token.name.empty() && token.name.front() == '!') break;
+                auto element = document->createElement(lowerAscii(token.name));
                 const std::string tagName = element->name();
                 dom::Node& inserted = openElements.back()->appendChild(std::move(element));
                 if (!isVoidTag(tagName)) openElements.push_back(&inserted);
@@ -46,7 +56,7 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
             case TokenType::EndTag: {
                 // Basic recovery: close the nearest matching open element.
                 for (std::size_t i = openElements.size(); i > 1; --i) {
-                    if (openElements[i - 1]->name() == token.name) {
+                    if (openElements[i - 1]->name() == lowerAscii(token.name)) {
                         openElements.resize(i - 1);
                         break;
                     }

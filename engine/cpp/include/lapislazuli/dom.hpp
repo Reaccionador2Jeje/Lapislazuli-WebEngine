@@ -91,8 +91,8 @@ public:
 
     [[nodiscard]] Element* documentElement() noexcept;
     [[nodiscard]] const Element* documentElement() const noexcept;
-    [[nodiscard]] Element* getElementById(std::string_view id) noexcept;
-    [[nodiscard]] const Element* getElementById(std::string_view id) const noexcept;
+    [[nodiscard]] Element* getElementById(std::string_view id);
+    [[nodiscard]] const Element* getElementById(std::string_view id) const;
     [[nodiscard]] std::vector<Element*> getElementsByTagName(std::string_view tagName);
     [[nodiscard]] std::vector<const Element*> getElementsByTagName(std::string_view tagName) const;
 };

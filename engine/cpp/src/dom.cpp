@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 
@@ -227,8 +228,8 @@ const Element* Document::documentElement() const noexcept {
     }
     return nullptr;
 }
-Element* Document::getElementById(std::string_view id) noexcept { return findById(*this, id); }
-const Element* Document::getElementById(std::string_view id) const noexcept {
+Element* Document::getElementById(std::string_view id) { return findById(*this, id); }
+const Element* Document::getElementById(std::string_view id) const {
     return findById(*this, id);
 }
 std::vector<Element*> Document::getElementsByTagName(std::string_view tagName) {
