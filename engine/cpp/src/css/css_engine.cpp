@@ -16,11 +16,33 @@ std::string trim(std::string s){auto a=std::find_if_not(s.begin(),s.end(),ws);au
 std::vector<std::string> words(const std::string&s){std::istringstream in(s);std::vector<std::string>v;std::string x;while(in>>x)v.push_back(x);return v;}
 std::optional<Length> parseLength(std::string_view raw){auto s=trim(std::string(raw));if(s=="auto")return Length{0,LengthUnit::Auto};if(s.empty())return std::nullopt;char*end=nullptr;double n=std::strtod(s.c_str(),&end);if(end==s.c_str()||!std::isfinite(n))return std::nullopt;auto u=lower(trim(std::string(end)));if(u.empty())return Length{n,LengthUnit::Number};if(u=="px")return Length{n,LengthUnit::Px};if(u=="%")return Length{n,LengthUnit::Percent};if(u=="em")return Length{n,LengthUnit::Em};if(u=="rem")return Length{n,LengthUnit::Rem};return std::nullopt;}
 bool hasClass(const dom::Element&e,std::string_view wanted){auto*v=e.getAttribute("class");if(!v)return false;std::size_t p=0;while(p<v->size()){while(p<v->size()&&ws((*v)[p]))++p;auto b=p;while(p<v->size()&&!ws((*v)[p]))++p;if(p>b&&std::string_view(*v).substr(b,p-b)==wanted)return true;}return false;}
-bool simpleMatch(const SimpleSelector&s,const dom::Element&e){if(!s.tag.empty()&&s.tag!="*"&&s.tag!=e.name())return false;if(!s.id.empty()){auto*v=e.getAttribute("id");if(!v||*v!=s.id)return false;}for(auto&c:s.classes)if(!hasClass(e,c))return false;return true;}
+bool simpleMatch(const SimpleSelector&s,const dom::Element&e){
+ if(!s.tag.empty()&&s.tag!="*"&&s.tag!=e.name())return false;
+ if(!s.id.empty()){auto*v=e.getAttribute("id");if(!v||*v!=s.id)return false;}
+ for(const auto&c:s.classes)if(!hasClass(e,c))return false;
+ for(const auto&a:s.attributes){auto*v=e.getAttribute(a.name);if(!v)return false;if(a.match==AttributeMatch::Exact&&*v!=a.value)return false;}
+ return true;
+}
 bool matchAt(const Selector&s,std::size_t i,const dom::Element&e){if(!simpleMatch(s.parts[i],e))return false;if(i==0)return true;auto*p=e.parent();if(s.combinators[i-1]==Combinator::Child)return p&&p->type()==dom::NodeType::Element&&matchAt(s,i-1,static_cast<const dom::Element&>(*p));while(p){if(p->type()==dom::NodeType::Element&&matchAt(s,i-1,static_cast<const dom::Element&>(*p)))return true;p=p->parent();}return false;}
 void expandFour(const std::string&prop,const std::string&value,std::vector<Declaration>&out,bool important){auto v=words(value);if(v.empty()||v.size()>4)return;auto t=v[0],r=v.size()>1?v[1]:t,b=v.size()>2?v[2]:t,l=v.size()>3?v[3]:r;out.push_back({prop+"-top",t,important});out.push_back({prop+"-right",r,important});out.push_back({prop+"-bottom",b,important});out.push_back({prop+"-left",l,important});}
 std::vector<Declaration> parseDeclarations(const std::vector<Token>&t,std::size_t p,std::size_t end){std::vector<Declaration>out;while(p<end){while(p<end&&(t[p].type==TokenType::Whitespace||t[p].type==TokenType::Semicolon))++p;if(p>=end)break;if(t[p].type!=TokenType::Ident){while(p<end&&t[p].type!=TokenType::Semicolon)++p;continue;}auto prop=lower(t[p++].text);while(p<end&&t[p].type==TokenType::Whitespace)++p;if(p>=end||t[p].type!=TokenType::Colon){while(p<end&&t[p].type!=TokenType::Semicolon)++p;continue;}++p;std::string value;int depth=0;while(p<end){auto k=t[p].type;if(k==TokenType::OpenBrace)++depth;if(k==TokenType::CloseBrace&&depth)--depth;if(k==TokenType::Semicolon&&!depth)break;value+=t[p++].text;}if(p<end&&t[p].type==TokenType::Semicolon)++p;value=trim(value);bool important=false;auto bang=value.rfind('!');if(bang!=std::string::npos&&lower(trim(value.substr(bang+1)))=="important"){important=true;value=trim(value.substr(0,bang));}if(value.empty())continue;if(prop=="margin"||prop=="padding"||prop=="border-width")expandFour(prop=="border-width"?"border":prop,value,out,important);else if(prop=="border"){for(auto&w:words(value))if(parseLength(w)){expandFour("border",w,out,important);break;}out.push_back({prop,value,important});}else out.push_back({prop,value,important});}return out;}
-bool compound(const std::vector<Token>&t,std::size_t&p,std::size_t end,SimpleSelector&s){bool used=false;if(p<end&&t[p].type==TokenType::Ident){s.tag=lower(t[p++].text);used=true;}else if(p<end&&t[p].type==TokenType::Delim&&t[p].text=="*"){s.tag="*";++p;used=true;}while(p<end){if(t[p].type==TokenType::Hash){s.id=t[p++].text.substr(1);used=true;}else if(t[p].type==TokenType::Dot){++p;if(p>=end||t[p].type!=TokenType::Ident)return false;s.classes.push_back(t[p++].text);used=true;}else break;}return used;}
+bool compound(const std::vector<Token>&t,std::size_t&p,std::size_t end,SimpleSelector&s){bool used=false;if(p<end&&t[p].type==TokenType::Ident){s.tag=lower(t[p++].text);used=true;}else if(p<end&&t[p].type==TokenType::Delim&&t[p].text=="*"){s.tag="*";++p;used=true;}while(p<end){if(t[p].type==TokenType::Hash){s.id=t[p++].text.substr(1);used=true;}else if(t[p].type==TokenType::Dot){++p;if(p>=end||t[p].type!=TokenType::Ident)return false;s.classes.push_back(t[p++].text);used=true;}
+else if(t[p].type==TokenType::SquareOpen){
+ ++p;while(p<end&&t[p].type==TokenType::Whitespace)++p;
+ if(p>=end||t[p].type!=TokenType::Ident)return false;
+ AttributeSelector a;a.name=lower(t[p++].text);
+ while(p<end&&t[p].type==TokenType::Whitespace)++p;
+ if(p<end&&t[p].type==TokenType::Equals){
+  ++p;while(p<end&&t[p].type==TokenType::Whitespace)++p;
+  if(p>=end||(t[p].type!=TokenType::Ident&&t[p].type!=TokenType::String&&t[p].type!=TokenType::Hash))return false;
+  a.match=AttributeMatch::Exact;a.value=t[p++].text;
+  if(a.value.size()>=2&&((a.value.front()=='"'&&a.value.back()=='"')||(a.value.front()=='\\''&&a.value.back()=='\\'')))a.value=a.value.substr(1,a.value.size()-2);
+  else if(!a.value.empty()&&a.value.front()=='#')a.value.erase(a.value.begin());
+ }else if(p<end&&t[p].type!=TokenType::SquareClose)return false;
+ while(p<end&&t[p].type==TokenType::Whitespace)++p;
+ if(p>=end||t[p].type!=TokenType::SquareClose)return false;
+ ++p;s.attributes.push_back(std::move(a));used=true;
+}else break;}return used;}
 std::vector<Selector> selectorList(const std::vector<Token>&t,std::size_t p,std::size_t end){std::vector<Selector>out;while(p<end){while(p<end&&t[p].type==TokenType::Whitespace)++p;Selector s;SimpleSelector first;if(!compound(t,p,end,first)){while(p<end&&t[p].type!=TokenType::Comma)++p;if(p<end)++p;continue;}s.parts.push_back(std::move(first));bool valid=true;while(p<end){bool space=false;while(p<end&&t[p].type==TokenType::Whitespace){space=true;++p;}if(p>=end||t[p].type==TokenType::Comma)break;Combinator c=Combinator::Descendant;if(t[p].type==TokenType::Greater){c=Combinator::Child;++p;while(p<end&&t[p].type==TokenType::Whitespace)++p;}else if(!space){valid=false;break;}SimpleSelector next;if(!compound(t,p,end,next)){valid=false;break;}s.combinators.push_back(c);s.parts.push_back(std::move(next));}if(valid)out.push_back(std::move(s));while(p<end&&t[p].type!=TokenType::Comma)++p;if(p<end)++p;}return out;}
 struct Winner{std::string value;bool important=false;unsigned specificity=0;std::size_t order=0;bool set=false;};
 void apply(std::unordered_map<std::string,Winner>&w,const Declaration&d,unsigned spec,std::size_t order){auto&c=w[d.property];auto a=std::tuple{d.important,spec,order},b=std::tuple{c.important,c.specificity,c.order};if(!c.set||a>=b)c={d.value,d.important,spec,order,true};}
@@ -92,6 +114,9 @@ std::vector<Token> Tokenizer::tokenize(std::string_view source) const {
             case '}': type = TokenType::CloseBrace; break;
             case ';': type = TokenType::Semicolon; break;
             case '!': type = TokenType::Bang; break;
+            case '[': type = TokenType::SquareOpen; break;
+            case ']': type = TokenType::SquareClose; break;
+            case '=': type = TokenType::Equals; break;
             default: break;
         }
         tokens.push_back({type, std::string(1, current), start});
@@ -100,7 +125,7 @@ std::vector<Token> Tokenizer::tokenize(std::string_view source) const {
     return tokens;
 }
 bool Selector::matches(const dom::Element&e)const{return !parts.empty()&&matchAt(*this,parts.size()-1,e);}
-unsigned Selector::specificity()const noexcept{unsigned ids=0,classes=0,tags=0;for(auto&p:parts){if(!p.id.empty())++ids;classes+=unsigned(p.classes.size());if(!p.tag.empty()&&p.tag!="*")++tags;}return ids*10000u+classes*100u+tags;}
+unsigned Selector::specificity()const noexcept{unsigned ids=0,classes=0,tags=0;for(auto&p:parts){if(!p.id.empty())++ids;classes+=unsigned(p.classes.size()+p.attributes.size());if(!p.tag.empty()&&p.tag!="*")++tags;}return ids*10000u+classes*100u+tags;}
 StyleSheet Parser::parse(std::string_view s)const{auto t=Tokenizer{}.tokenize(s);StyleSheet sheet;std::size_t p=0,order=0;while(p<t.size()&&t[p].type!=TokenType::End){while(p<t.size()&&(t[p].type==TokenType::Whitespace||t[p].type==TokenType::Semicolon))++p;if(p>=t.size()||t[p].type==TokenType::End)break;auto sb=p;while(p<t.size()&&t[p].type!=TokenType::OpenBrace&&t[p].type!=TokenType::End)++p;if(p>=t.size()||t[p].type!=TokenType::OpenBrace)break;auto se=p++;auto db=p;while(p<t.size()&&t[p].type!=TokenType::CloseBrace&&t[p].type!=TokenType::End)++p;auto de=p;if(p<t.size()&&t[p].type==TokenType::CloseBrace)++p;Rule r;r.selectors=selectorList(t,sb,se);r.declarations=parseDeclarations(t,db,de);r.source_order=order++;if(!r.selectors.empty()&&!r.declarations.empty())sheet.rules_.push_back(std::move(r));}return sheet;}
 const std::string* ComputedStyle::get(std::string_view p)const noexcept{auto i=properties_.find(std::string(p));return i==properties_.end()?nullptr:&i->second;}
 bool ComputedStyle::contains(std::string_view p)const noexcept{return get(p)!=nullptr;}
