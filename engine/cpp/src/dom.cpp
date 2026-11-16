@@ -161,7 +161,11 @@ std::string Node::serialize() const {
         if (child->type_ == NodeType::Element) {
             result += "<" + child->name_;
             const auto* element = static_cast<const Element*>(child.get());
-            for (const auto& [key, value] : element->attributes()) {
+            std::vector<std::pair<std::string, std::string>> attributes(
+                element->attributes().begin(), element->attributes().end());
+            std::sort(attributes.begin(), attributes.end(),
+                [](const auto& left, const auto& right) { return left.first < right.first; });
+            for (const auto& [key, value] : attributes) {
                 result += " " + key + "=\"" + escapeAttribute(value) + "\"";
             }
             result += ">";
