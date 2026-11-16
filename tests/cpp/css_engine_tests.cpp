@@ -23,7 +23,7 @@ int main() {
  html->appendChild(std::move(body));
  d.appendChild(std::move(html));
  const auto* cardPtr=d.getElementById("hero");
- auto sheet=css::Parser{}.parse("body { display:block; color:black } .card { color:blue; padding:12px } #hero { color:red } .page > .card.featured { background:#eeeeee; margin:4px } .card .title, h1 { font-size:20px } .card { color:green !important } .sized { width:75%; height:120px; margin:1px 2px 3px 4px; box-sizing:border-box }");
+ auto sheet=css::Parser{}.parse("body { display:block; color:black } .card { color:blue; padding:12px } #hero { color:red } .page > .card.featured { background:#eeeeee; margin:4px } .card .title, h1 { font-size:20px } .card { color:green !important } .sized { font-size:1.5em; padding:.5rem; width:75%; height:120px; margin:1px 2px 3px 4px; box-sizing:border-box }");
  assert(sheet.rules().size()==7);
  auto tokens=css::Tokenizer{}.tokenize("#hero.card > h1.title");
  assert(!tokens.empty()&&tokens.front().type==css::TokenType::Hash&&tokens.front().text=="#hero");
@@ -43,7 +43,7 @@ int main() {
  assert(tree.at(heading).get("color")&&*tree.at(heading).get("color")=="black");
  const auto* sizedPtr=d.getElementsByTagName("section").front();
  const auto& box=tree.at(sizedPtr).boxModel();
- assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);
+ assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);\n assert(tree.at(sizedPtr).length("font-size")->value==1.5&&tree.at(sizedPtr).length("font-size")->unit==css::LengthUnit::Em);\n assert(tree.at(sizedPtr).length("padding-top")->unit==css::LengthUnit::Rem);
  assert(box.height.value==120&&box.height.unit==css::LengthUnit::Px);
  assert(box.margin.left.value==4&&box.margin.right.value==2);
  assert(box.box_sizing=="border-box");
