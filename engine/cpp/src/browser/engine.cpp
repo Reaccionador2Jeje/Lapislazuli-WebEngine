@@ -116,12 +116,6 @@ struct ResourceBudget {
     static constexpr std::size_t maxBytes = 32 * 1024 * 1024;
 };
 
-void recordFailure(ResourceResult& item, std::string message,
-                   std::vector<ResourceResult>& resources) {
-    item.error = std::move(message);
-    resources.push_back(std::move(item));
-}
-
 void processDocumentNode(dom::Node& node, const std::string& baseUrl,
                          const net::HttpClient& http, js::Runtime& runtime,
                          NavigationResult& result, ResourceBudget& budget) {
