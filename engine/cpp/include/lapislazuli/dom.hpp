@@ -60,6 +60,8 @@ public:
     explicit Element(std::string tagName);
 
     void setAttribute(std::string name, std::string value);
+    // Replaces all descendants with one text node containing value.
+    void setTextContent(std::string value);
     [[nodiscard]] const std::string* getAttribute(std::string_view name) const noexcept;
     [[nodiscard]] bool hasAttribute(std::string_view name) const noexcept;
     [[nodiscard]] bool removeAttribute(std::string_view name);
