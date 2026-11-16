@@ -18,6 +18,10 @@ int main() {
  title->setAttribute("class","title");
  card->appendChild(std::move(title));
  body->appendChild(std::move(card));
+ auto tagged=d.createElement("button");
+ tagged->setAttribute("data-kind","primary");
+ tagged->setAttribute("disabled","");
+ body->appendChild(std::move(tagged));
  auto sized=d.createElement("section");
  sized->setAttribute("class","sized");
  body->appendChild(std::move(sized));
@@ -26,12 +30,17 @@ int main() {
  const auto* cardPtr=d.getElementById("hero");
  auto sheet=css::Parser{}.parse("body { display:block; color:black } .card { color:blue; padding:12px } #hero { color:red } .page > .card.featured { background:#eeeeee; margin:4px } .card .title, h1 { font-size:20px } .card { color:green !important } .sized { font-size:1.5em; padding:.5rem; width:75%; height:120px; margin:1px 2px 3px 4px; box-sizing:border-box }");
  assert(sheet.rules().size()==7);
+ auto attributeSheet=css::Parser{}.parse(
+     "[data-kind] { color: teal } button[data-kind=primary] { font-weight: bold }");
+ assert(attributeSheet.rules().size()==2);
+ assert(attributeSheet.rules()[0].selectors[0].specificity()==100);
+ assert(attributeSheet.rules()[1].selectors[0].specificity()==101);
  auto tokens=css::Tokenizer{}.tokenize("#hero.card > h1.title");
  assert(!tokens.empty()&&tokens.front().type==css::TokenType::Hash&&tokens.front().text=="#hero");
  css::StyleResolver resolver;
  std::vector<const css::StyleSheet*> sheets{&sheet};
  auto tree=resolver.computeTree(d,sheets);
- assert(tree.size()==5);
+ assert(tree.size()==6);
  const auto& cardStyle=tree.at(cardPtr);
  assert(cardStyle.get("color")&&*cardStyle.get("color")=="green");
  assert(cardStyle.get("padding-top")&&*cardStyle.get("padding-top")=="12px");
@@ -42,6 +51,11 @@ int main() {
  assert(tree.at(bodyPtr).get("color")&&*tree.at(bodyPtr).get("color")=="black");
  assert(tree.at(heading).get("font-size")&&*tree.at(heading).get("font-size")=="20px");
  assert(tree.at(heading).get("color")&&*tree.at(heading).get("color")=="green");
+ const auto* buttonPtr=d.getElementsByTagName("button").front();
+ std::vector<const css::StyleSheet*> attributeSheets{&attributeSheet};
+ const auto buttonStyle=resolver.compute(*buttonPtr,attributeSheets);
+ assert(buttonStyle.get("color")&&*buttonStyle.get("color")=="teal");
+ assert(buttonStyle.get("font-weight")&&*buttonStyle.get("font-weight")=="bold");
  const auto* sizedPtr=d.getElementsByTagName("section").front();
  const auto& box=tree.at(sizedPtr).boxModel();
  assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);
