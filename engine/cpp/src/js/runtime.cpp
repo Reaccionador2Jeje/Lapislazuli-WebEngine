@@ -101,10 +101,6 @@ bool isNullish(const Value& value) {
            std::holds_alternative<Undefined>(value.storage());
 }
 
-bool isNumber(const Value& value) {
-    return std::holds_alternative<double>(value.storage());
-}
-
 bool isString(const Value& value) {
     return std::holds_alternative<std::string>(value.storage());
 }
@@ -261,8 +257,8 @@ private:
             if (right.toNumber() == 0.0) throw std::runtime_error("Division by zero");
             return numericResult(std::fmod(left.toNumber(), right.toNumber()));
         }
-        if (op == "==") return Value(left.toString() == right.toString() || isNullish(left) && isNullish(right));
-        if (op == "!=") return Value(!(left.toString() == right.toString() || isNullish(left) && isNullish(right)));
+        if (op == "==") return Value(left.toString() == right.toString() || (isNullish(left) && isNullish(right)));
+        if (op == "!=") return Value(!(left.toString() == right.toString() || (isNullish(left) && isNullish(right))));
         if (op == "<") return Value(left.toNumber() < right.toNumber());
         if (op == ">") return Value(left.toNumber() > right.toNumber());
         if (op == "<=") return Value(left.toNumber() <= right.toNumber());
