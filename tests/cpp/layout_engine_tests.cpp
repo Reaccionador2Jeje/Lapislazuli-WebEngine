@@ -19,12 +19,26 @@ int main() {
     inner->appendChild(document.createTextNode("Layout works"));
     card->appendChild(std::move(inner));
     body->appendChild(std::move(card));
+
+    auto flex = document.createElement("div");
+    flex->setAttribute("class", "row");
+    auto first = document.createElement("div");
+    first->setAttribute("class", "item");
+    first->appendChild(document.createTextNode("One"));
+    auto second = document.createElement("div");
+    second->setAttribute("class", "item");
+    second->appendChild(document.createTextNode("Two"));
+    flex->appendChild(std::move(first));
+    flex->appendChild(std::move(second));
+    body->appendChild(std::move(flex));
     html->appendChild(std::move(body));
     document.appendChild(std::move(html));
 
     auto sheet = css::Parser{}.parse(
         ".card { width:200px; height:50px; padding:10px; margin:5px; }"
         ".inner { width:50%; height:20px; }"
+        ".row { display:flex; width:300px; height:100px; gap:10px; justify-content:center; align-items:center; }"
+        ".item { width:50px; height:20px; }"
         ".hidden { display:none; }");
     std::vector<const css::StyleSheet*> sheets{&sheet};
     const auto styles = css::StyleResolver{}.computeTree(document, sheets);
@@ -37,7 +51,7 @@ int main() {
 
     const auto& body_box = result.root.children.front();
     assert(body_box.display == "block");
-    assert(body_box.children.size() == 1);
+    assert(body_box.children.size() == 2);
 
     const auto& card_box = body_box.children.front();
     assert(card_box.display == "block");
@@ -52,6 +66,15 @@ int main() {
     assert(inner_box.height == 20);
     assert(inner_box.children.size() == 1);
     assert(inner_box.children.front().text == "Layout works");
+
+    const auto& flex_box = body_box.children.back();
+    assert(flex_box.display == "flex");
+    assert(flex_box.width == 300);
+    assert(flex_box.height == 100);
+    assert(flex_box.children.size() == 2);
+    assert(flex_box.children[0].width == 50);
+    assert(flex_box.children[1].width == 50);
+    assert(flex_box.children[1].x - flex_box.children[0].x == 60);
 
     std::cout << "Layout engine tests passed.\n";
 }
