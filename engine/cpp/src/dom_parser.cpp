@@ -55,7 +55,8 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
     auto el=doc->createElement(t.name);
     for(const auto& a:t.attributes) if(!el->hasAttribute(a.name))el->setAttribute(a.name,decode(a.value));
     auto name=el->name(); auto& inserted=stack.back()->appendChild(std::move(el));
-    if(!t.self_closing&&!isVoid(name))stack.push_back(&inserted);
+    // In HTML syntax, the self-closing flag does not close ordinary HTML elements.
+    if(!isVoid(name))stack.push_back(&inserted);
     break;
    }
    case TokenType::EndTag:
