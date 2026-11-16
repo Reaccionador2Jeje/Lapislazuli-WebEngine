@@ -88,6 +88,20 @@ The HTML, CSS, and layout modules now have additional tested behavior:
 These are deliberately limited foundations, not full HTML5 parsing, complete CSS selector support, or a standards-complete Flexbox implementation. The parser does not yet implement the full WHATWG tree-construction algorithm, all character references, raw-text/RCDATA states, foster parenting, or automatic document structure synthesis. CSS attribute matching currently supports presence and exact-value operators only; pseudo-classes and the remaining attribute operators are not implemented. Flex sizing, wrapping, flex-grow/shrink/basis, min/max constraints, and the full alignment specification remain future work.
 
 
+## 1.0 architecture work — Stage 3: JavaScript integration
+
+The browser facade now connects the experimental JavaScript runtime to parsed HTML documents:
+
+- The HTML tokenizer treats `script`, `style`, `textarea`, and `title` contents as raw/RCDATA-like text until their matching end tag, so comparison operators and markup-like text inside scripts are not tokenized as HTML.
+- Inline classic scripts without a `type` attribute, or with `text/javascript` / `application/javascript`, execute in document order during browser navigation.
+- A page-level runtime is shared by the inline scripts in one document, preserving their supported global variables.
+- The native DOM bridge supports `getElementText`, `setElementText`, `setElementAttribute`, `getElementAttribute`, `removeElementAttribute`, and `clickElement`.
+- `clickElement(id)` dispatches the element's inline `onclick` attribute using the same limited interpreter.
+- Script execution results report the number of inline scripts found, successful executions, and per-script errors. A failing script does not prevent later scripts from running.
+- External scripts (`src`) and module scripts are skipped; they are not fetched or executed.
+
+The bridge functions are Lapislazuli host APIs, not standard JavaScript `document` objects or standards-compliant DOM methods. The interpreter still has no function declarations, closures, objects, arrays, promises, event loop, timers, or general-purpose event listener API. There is no JavaScript sandbox or standards-complete browser security model yet; this feature must be treated as experimental and must not be presented as safe for arbitrary hostile pages.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -105,7 +119,7 @@ The C++ CSS module currently provides:
 - Initial margin and padding shorthand expansion.
 - A queryable box-model structure for width, height, margins, padding, borders, and box-sizing.
 
-The C++ JavaScript module introduces a small interpreter-like runtime with let, const, and var declarations (stored in a shared global environment), boolean/null/undefined/numeric/string values, arithmetic and comparison operators, logical operators, parenthesized and unary expressions, registered host functions, built-in print, String, Number, and Boolean functions, an output callback, and a read-only DOM bridge through getElementText(id).
+The C++ JavaScript module introduces a small interpreter-like runtime with let, const, and var declarations (stored in a shared global environment), boolean/null/undefined/numeric/string values, arithmetic and comparison operators, logical operators, parenthesized and unary expressions, registered host functions, built-in print, String, Number, and Boolean functions, an output callback, and a mutable host DOM bridge. The browser facade can execute supported inline classic scripts and dispatch basic inline onclick handlers.
 
 Example:
 
@@ -114,7 +128,7 @@ Example:
     let total = price * quantity;
     print('Total:', total);
 
-This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is read-only, and HTML script elements are not executed automatically. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
+This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is limited to named host functions rather than the standard JavaScript document API. Script execution supports only inline classic scripts and the documented interpreter subset. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
 
 ## Networking (0.8)
 
