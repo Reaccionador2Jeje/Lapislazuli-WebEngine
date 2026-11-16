@@ -29,23 +29,24 @@ Lapislazuli is not currently a drop-in replacement for mature browser engines. I
 
 ## Architecture
 
-The project is being developed with a combination of **C++ and Rust**.
-
-Planned subsystems include HTML tokenization and parsing, DOM tree and document APIs, CSS tokenization and parsing, selectors and cascade, layout and rendering, JavaScript integration, URL handling and networking, HTTPS, cookies, storage, and browser-facing APIs.
+The project is being developed with a combination of **C++ and Rust**. Planned subsystems include HTML tokenization and parsing, DOM, CSS, layout and rendering, JavaScript integration, URL handling, networking, HTTPS, cookies, storage, and browser-facing APIs.
 
 ## Current status
 
-**Milestone 0.4 — experimental CSS engine foundation.**
+**Milestone 0.5 — experimental CSS values, inheritance, and box-model foundation.**
 
 The C++ CSS module currently provides:
-- CSS tokenization for identifiers, hashes, strings, punctuation, whitespace, and comments.
-- Stylesheet parsing and declaration extraction.
-- Basic type, class, ID, compound, descendant, and child selectors.
-- Selector specificity and comma-separated selector lists.
-- Initial cascade ordering, !important, and inline style declarations.
-- Computed-style lookup for individual elements and whole DOM trees.
 
-This is an intentionally small CSS subset, not a complete CSS Syntax or Selectors specification implementation. Pseudo-classes, attribute selectors, namespaces, custom-property substitution, inheritance, shorthand expansion, media queries, and the full cascade/layer model are not implemented. Computed values are retained as strings; this milestone does not perform layout or paint.
+- CSS tokenization and a limited stylesheet parser.
+- Basic type, class, ID, compound, descendant, and child selectors.
+- Selector specificity, source ordering, important declarations, and inline styles.
+- Basic inheritance for common text-related properties, including color and font size.
+- Initial handling of inherit, initial, and unset for the supported property subset.
+- Length parsing for unitless numbers, px, %, em, rem, and auto.
+- Initial margin and padding shorthand expansion.
+- A queryable box-model structure for width, height, margins, padding, borders, and box-sizing.
+
+This is not a complete CSS implementation. Percentage and font-relative lengths are parsed but not resolved against layout context. Border shorthand support is limited. There is no layout algorithm, used-value calculation, painting, full property initial-value database, custom-property support, or standards-complete cascade.
 
 ## Build
 
@@ -70,8 +71,8 @@ Requirements: Rust and Cargo.
 | 0.2 | HTML parser and DOM foundation |
 | 0.3 | HTML attributes, entities, and parser improvements |
 | 0.4 | CSS parsing, selectors, and initial cascade |
-| 0.5 | CSS values, inheritance, and box-model layout |
-| 0.6 | Rendering pipeline |
+| 0.5 | CSS values, inheritance, and box-model foundation |
+| 0.6 | Layout and rendering pipeline |
 | 0.7 | JavaScript integration |
 | 0.8 | Networking and secure transport |
 | 0.9 | Storage and external browser integrations |
@@ -81,7 +82,7 @@ A milestone does not imply complete support for every feature in that area. Comp
 
 ## Contributing
 
-Contributions, bug reports, architecture discussions, and documentation improvements are welcome. See CONTRIBUTING.md for the project workflow.
+Contributions, bug reports, architecture discussions, and documentation improvements are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the project workflow.
 
 When reporting a compatibility issue, include a minimal HTML/CSS/JS example, expected behavior, actual behavior, and your build environment where possible.
 
@@ -93,4 +94,4 @@ The goal is not to promise an instant replacement for existing engines. The goal
 
 ## License
 
-Lapislazuli WebEngine is distributed under the MIT License. See LICENSE.
+Lapislazuli WebEngine is distributed under the MIT License. See [LICENSE](LICENSE).
