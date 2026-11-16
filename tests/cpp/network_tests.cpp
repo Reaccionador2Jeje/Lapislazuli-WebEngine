@@ -1,0 +1,6 @@
+#include "lapislazuli/net/http_client.hpp"
+#include <cassert>
+#include <iostream>
+using lapislazuli::net::ClientConfig;using lapislazuli::net::HttpClient;using lapislazuli::net::NetworkError;
+template<class F>void rejects(F f){bool caught=false;try{f();}catch(const NetworkError&){caught=true;}assert(caught);}
+int main(){HttpClient::validateUrl("https://example.com/path?q=1");HttpClient::validateUrl("https://example.com:8443/");rejects([]{HttpClient::validateUrl("http://example.com");});rejects([]{HttpClient::validateUrl("file:///etc/passwd");});rejects([]{HttpClient::validateUrl("https://user:pass@example.com");});rejects([]{HttpClient::validateUrl("https://example.com/a b");});HttpClient::validateUrl("http://localhost:8080",true);HttpClient::validateHeader("Accept","text/html");rejects([]{HttpClient::validateHeader("Bad Header","x");});rejects([]{HttpClient::validateHeader("X-Test","ok\r\nInjected: yes");});ClientConfig cfg;cfg.maxResponseBytes=1024;HttpClient client(cfg);(void)client;rejects([]{ClientConfig c;c.connectTimeoutMs=20000;c.totalTimeoutMs=1000;HttpClient bad(c);});rejects([]{ClientConfig c;c.verifyTlsPeer=false;HttpClient bad(c);});std::cout<<"Network policy and HTTP client configuration tests passed.\n";}
