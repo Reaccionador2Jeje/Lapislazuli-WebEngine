@@ -37,13 +37,14 @@ int main() {
     assert(document.getElementById("main") == nullptr);
     root.appendChild(std::move(detached));
 
-    bool rejectedCycle = false;
+    bool rejectedLeafChild = false;
     try {
-        bodyNode->appendChild(std::unique_ptr<lapislazuli::dom::Node>(&root));
+        auto textNode = document.createTextNode("leaf");
+        textNode->appendChild(document.createTextNode("invalid"));
     } catch (const std::invalid_argument&) {
-        rejectedCycle = true;
+        rejectedLeafChild = true;
     }
-    assert(rejectedCycle);
+    assert(rejectedLeafChild);
 
     lapislazuli::html::DocumentParser parser;
     const auto parsed = parser.parse("<html><body><!--note--><p>Hi</p><br></body></html>");
