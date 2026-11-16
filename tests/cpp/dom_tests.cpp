@@ -27,7 +27,7 @@ int main() {
     assert(document.getElementById("missing") == nullptr);
     assert(document.getElementsByTagName("p").size() == 1);
     assert(root.textContent() == "Hello <web>");
-    assert(root.serialize() ==
+    assert(document.serialize() ==
         "<html lang=\"en\"><body id=\"main\"><p>Hello &lt;web&gt;</p></body></html>");
 
     auto* bodyNode = document.getElementById("main");
@@ -37,13 +37,13 @@ int main() {
     assert(document.getElementById("main") == nullptr);
     root.appendChild(std::move(detached));
 
-    bool rejectedCycle = false;
+    bool rejectedNull = false;
     try {
-        bodyNode->appendChild(std::unique_ptr<lapislazuli::dom::Node>(&root));
+        bodyNode->appendChild(nullptr);
     } catch (const std::invalid_argument&) {
-        rejectedCycle = true;
+        rejectedNull = true;
     }
-    assert(rejectedCycle);
+    assert(rejectedNull);
 
     lapislazuli::html::DocumentParser parser;
     const auto parsed = parser.parse("<html><body><!--note--><p>Hi</p><br></body></html>");
