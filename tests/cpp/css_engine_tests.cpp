@@ -43,9 +43,12 @@ int main() {
  assert(tree.at(heading).get("color")&&*tree.at(heading).get("color")=="black");
  const auto* sizedPtr=d.getElementsByTagName("section").front();
  const auto& box=tree.at(sizedPtr).boxModel();
- assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);\n assert(tree.at(sizedPtr).length("font-size")->value==1.5&&tree.at(sizedPtr).length("font-size")->unit==css::LengthUnit::Em);\n assert(tree.at(sizedPtr).length("padding-top")->unit==css::LengthUnit::Rem);
+ assert(box.width.value==75&&box.width.unit==css::LengthUnit::Percent);
+ assert(tree.at(sizedPtr).length("font-size")->value==1.5&&tree.at(sizedPtr).length("font-size")->unit==css::LengthUnit::Em);
+ assert(tree.at(sizedPtr).length("padding-top")->unit==css::LengthUnit::Rem);
  assert(box.height.value==120&&box.height.unit==css::LengthUnit::Px);
  assert(box.margin.left.value==4&&box.margin.right.value==2);
  assert(box.box_sizing=="border-box");
- std::cout<<"CSS values, inheritance, box model, and cascade tests passed.\n";
+ std::cout<<"CSS values, inheritance, box model, and cascade tests passed.
+";
 }
