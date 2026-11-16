@@ -245,7 +245,11 @@ Requirements: Rust and Cargo.
 | 0.7 | Experimental JavaScript runtime and DOM bridge |
 | 0.8 | HTTP transport, HTTPS defaults, and network security foundations |
 | 0.9 | Persistent origin-partitioned storage and browser integration facade |
-| 1.0 preparation | Core runtime, public SDK package, integration contracts, and release validation |\n| 1.0 preparation — Stage 2 | HTML attributes/entities, CSS attribute selectors, and initial flex layout |\n| 1.0 | Stable, documented engine release after all acceptance criteria pass |
+| 1.0 preparation | Core runtime, public SDK package, integration contracts, and release validation |
+| 1.0 preparation — Stage 2 | HTML attributes/entities, CSS attribute selectors, and initial flex layout |
+| 1.0 preparation — Stage 3 | Inline JavaScript execution and mutable DOM bridge |
+| 1.0 preparation — Stage 4 | Relative resource URLs, linked CSS, images, and external classic scripts |
+| 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
 
