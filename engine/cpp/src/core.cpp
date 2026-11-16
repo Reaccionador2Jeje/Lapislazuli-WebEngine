@@ -1,0 +1,56 @@
+#include "lapislazuli/core.hpp"
+
+#include <array>
+
+namespace lapislazuli::core {
+namespace {
+
+constexpr std::array<ModuleDescriptor, 8> kModules{{
+    {"dom", "HTML and DOM", ModuleStatus::Experimental,
+     "HTML tokenization, document parsing, and mutable DOM primitives."},
+    {"css", "CSS", ModuleStatus::Experimental,
+     "A limited stylesheet, selector, cascade, and value-processing implementation."},
+    {"layout", "Layout", ModuleStatus::Experimental,
+     "Initial box-model and block-flow layout calculations."},
+    {"js", "JavaScript", ModuleStatus::Experimental,
+     "A limited interpreter runtime with an initial read-only DOM bridge."},
+    {"net", "Networking", ModuleStatus::Foundation,
+     "HTTP transport with HTTPS-first defaults, TLS verification, and response limits."},
+    {"storage", "Persistent storage", ModuleStatus::Foundation,
+     "SQLite-backed key/value storage partitioned by an embedder-provided origin key."},
+    {"browser", "Browser integration", ModuleStatus::Experimental,
+     "An initial navigation facade that fetches and parses HTML responses."},
+    {"core", "Runtime and module registry", ModuleStatus::Foundation,
+     "Version metadata and discoverable module capability information."}
+}};
+
+} // namespace
+
+std::string_view EngineRuntime::engineName() noexcept {
+    return "Lapislazuli WebEngine";
+}
+
+std::string_view EngineRuntime::projectWebsite() noexcept {
+    return "https://github.com/Reaccionador2Jeje/Lapislazuli-WebEngine";
+}
+
+std::span<const ModuleDescriptor> EngineRuntime::modules() noexcept {
+    return kModules;
+}
+
+const ModuleDescriptor* EngineRuntime::findModule(std::string_view id) noexcept {
+    for (const auto& module : kModules) {
+        if (module.id == id) return &module;
+    }
+    return nullptr;
+}
+
+std::string_view moduleStatusName(ModuleStatus status) noexcept {
+    switch (status) {
+        case ModuleStatus::Foundation: return "foundation";
+        case ModuleStatus::Experimental: return "experimental";
+    }
+    return "unknown";
+}
+
+} // namespace lapislazuli::core
