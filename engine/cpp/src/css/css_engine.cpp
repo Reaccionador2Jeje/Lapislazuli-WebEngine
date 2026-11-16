@@ -29,7 +29,76 @@ std::string initial(std::string_view p){if(p=="color")return "black";if(p=="font
 void resolveKeywords(std::unordered_map<std::string,Winner>&w,const ComputedStyle*parent){static constexpr std::string_view inheritedNames[]={"color","cursor","direction","font-family","font-size","font-style","font-weight","letter-spacing","line-height","text-align","text-indent","text-transform","visibility","white-space","word-spacing"};for(auto p:inheritedNames)if(parent)if(auto*v=parent->get(p)){auto&x=w[std::string(p)];if(!x.set)x={*v,false,0,0,true};}for(auto&[p,x]:w){if(!x.set)continue;auto k=lower(trim(x.value));if(k=="inherit"||(k=="unset"&&inherited(p))){auto*v=parent?parent->get(p):nullptr;x.value=v?*v:initial(p);}else if(k=="initial"||k=="unset")x.value=initial(p);}}
 void computeNode(const dom::Element&e,const std::vector<const StyleSheet*>&sheets,const StyleResolver&r,const ComputedStyle*parent,std::unordered_map<const dom::Element*,ComputedStyle>&out){auto style=r.compute(e,sheets,parent);out.emplace(&e,style);for(auto&child:e.children())if(child->type()==dom::NodeType::Element)computeNode(static_cast<const dom::Element&>(*child),sheets,r,&style,out);}
 }
-std::vector<Token> Tokenizer::tokenize(std::string_view s)const{std::vector<Token>o;std::size_t p=0;while(p<s.size()){auto b=p;char c=s[p];if(ws(c)){while(p<s.size()&&ws(s[p]))++p;o.push_back({TokenType::Whitespace,std::string(s.substr(b,p-b)),b});continue;}if(c=='/'&&p+1<s.size()&&s[p+1]=='*'){auto e=s.find("*/",p+2);p=e==s.npos?s.size():e+2;o.push_back({TokenType::Whitespace," ",b});continue;}if(c=='"'||c=='\\''){char q=c;++p;std::string v;while(p<s.size()&&s[p]!=q){if(s[p]=='\\\\'&&p+1<s.size())++p;v.push_back(s[p++]);}if(p<s.size())++p;o.push_back({TokenType::String,std::string(1,q)+v+q,b});continue;}if(c=='#'&&p+1<s.size()&&nameChar(s[p+1])){++p;auto x=p;while(p<s.size()&&nameChar(s[p]))++p;o.push_back({TokenType::Hash,"#"+std::string(s.substr(x,p-x)),b});continue;}if(startName(c)||(c=='-'&&p+1<s.size()&&nameChar(s[p+1]))){++p;while(p<s.size()&&nameChar(s[p]))++p;o.push_back({TokenType::Ident,std::string(s.substr(b,p-b)),b});continue;}++p;TokenType k=TokenType::Delim;switch(c){case '.':k=TokenType::Dot;break;case ':':k=TokenType::Colon;break;case ',':k=TokenType::Comma;break;case '>':k=TokenType::Greater;break;case '{':k=TokenType::OpenBrace;break;case '}':k=TokenType::CloseBrace;break;case ';':k=TokenType::Semicolon;break;case '!':k=TokenType::Bang;break;default:break;}o.push_back({k,std::string(1,c),b});}o.push_back({TokenType::End,{},s.size()});return o;}
+std::vector<Token> Tokenizer::tokenize(std::string_view source) const {
+    std::vector<Token> tokens;
+    std::size_t position = 0;
+    while (position < source.size()) {
+        const std::size_t start = position;
+        const char current = source[position];
+
+        if (ws(current)) {
+            while (position < source.size() && ws(source[position])) ++position;
+            tokens.push_back({TokenType::Whitespace,
+                std::string(source.substr(start, position - start)), start});
+            continue;
+        }
+
+        if (current == '/' && position + 1 < source.size() && source[position + 1] == '*') {
+            const auto close = source.find("*/", position + 2);
+            position = close == std::string_view::npos ? source.size() : close + 2;
+            tokens.push_back({TokenType::Whitespace, " ", start});
+            continue;
+        }
+
+        if (current == '"' || current == '\'') {
+            const char quote = current;
+            ++position;
+            std::string value;
+            while (position < source.size() && source[position] != quote) {
+                if (source[position] == '\\' && position + 1 < source.size()) ++position;
+                value.push_back(source[position++]);
+            }
+            if (position < source.size()) ++position;
+            tokens.push_back({TokenType::String, std::string(1, quote) + value + quote, start});
+            continue;
+        }
+
+        if (current == '#' && position + 1 < source.size() && nameChar(source[position + 1])) {
+            ++position;
+            const auto nameStart = position;
+            while (position < source.size() && nameChar(source[position])) ++position;
+            tokens.push_back({TokenType::Hash,
+                "#" + std::string(source.substr(nameStart, position - nameStart)), start});
+            continue;
+        }
+
+        if (startName(current) ||
+            (current == '-' && position + 1 < source.size() && nameChar(source[position + 1]))) {
+            ++position;
+            while (position < source.size() && nameChar(source[position])) ++position;
+            tokens.push_back({TokenType::Ident,
+                std::string(source.substr(start, position - start)), start});
+            continue;
+        }
+
+        ++position;
+        TokenType type = TokenType::Delim;
+        switch (current) {
+            case '.': type = TokenType::Dot; break;
+            case ':': type = TokenType::Colon; break;
+            case ',': type = TokenType::Comma; break;
+            case '>': type = TokenType::Greater; break;
+            case '{': type = TokenType::OpenBrace; break;
+            case '}': type = TokenType::CloseBrace; break;
+            case ';': type = TokenType::Semicolon; break;
+            case '!': type = TokenType::Bang; break;
+            default: break;
+        }
+        tokens.push_back({type, std::string(1, current), start});
+    }
+    tokens.push_back({TokenType::End, {}, source.size()});
+    return tokens;
+}
 bool Selector::matches(const dom::Element&e)const{return !parts.empty()&&matchAt(*this,parts.size()-1,e);}
 unsigned Selector::specificity()const noexcept{unsigned ids=0,classes=0,tags=0;for(auto&p:parts){if(!p.id.empty())++ids;classes+=unsigned(p.classes.size());if(!p.tag.empty()&&p.tag!="*")++tags;}return ids*10000u+classes*100u+tags;}
 StyleSheet Parser::parse(std::string_view s)const{auto t=Tokenizer{}.tokenize(s);StyleSheet sheet;std::size_t p=0,order=0;while(p<t.size()&&t[p].type!=TokenType::End){while(p<t.size()&&(t[p].type==TokenType::Whitespace||t[p].type==TokenType::Semicolon))++p;if(p>=t.size()||t[p].type==TokenType::End)break;auto sb=p;while(p<t.size()&&t[p].type!=TokenType::OpenBrace&&t[p].type!=TokenType::End)++p;if(p>=t.size()||t[p].type!=TokenType::OpenBrace)break;auto se=p++;auto db=p;while(p<t.size()&&t[p].type!=TokenType::CloseBrace&&t[p].type!=TokenType::End)++p;auto de=p;if(p<t.size()&&t[p].type==TokenType::CloseBrace)++p;Rule r;r.selectors=selectorList(t,sb,se);r.declarations=parseDeclarations(t,db,de);r.source_order=order++;if(!r.selectors.empty()&&!r.declarations.empty())sheet.rules_.push_back(std::move(r));}return sheet;}
