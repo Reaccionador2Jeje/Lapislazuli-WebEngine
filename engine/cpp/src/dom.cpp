@@ -185,6 +185,11 @@ Element::Element(std::string tagName)
     if (name_.empty()) throw std::invalid_argument("Element tag name cannot be empty");
 }
 
+void Element::setTextContent(std::string value) {
+    children_.clear();
+    if (!value.empty()) appendChild(std::make_unique<Text>(std::move(value)));
+}
+
 void Element::setAttribute(std::string name, std::string value) {
     if (name.empty()) throw std::invalid_argument("Attribute name cannot be empty");
     attributes_[lowerAscii(std::move(name))] = std::move(value);
