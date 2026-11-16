@@ -27,12 +27,15 @@ int main() {
         StorageArea first(path.string(), "https://alpha.example:443");
         first.setItem("theme", "dark");
         first.setItem("language", "es");
+        first.setItem("empty", "");
         assert(first.getItem("theme") == std::optional<std::string>("dark"));
-        assert(first.length() == 2);
-        assert(first.key(0) == std::optional<std::string>("language"));
-        assert(first.key(1) == std::optional<std::string>("theme"));
-        assert(!first.key(2).has_value());
-        assert(first.usageBytes() == 20);
+        assert(first.getItem("empty") == std::optional<std::string>(""));
+        assert(first.length() == 3);
+        assert(first.key(0) == std::optional<std::string>("empty"));
+        assert(first.key(1) == std::optional<std::string>("language"));
+        assert(first.key(2) == std::optional<std::string>("theme"));
+        assert(!first.key(3).has_value());
+        assert(first.usageBytes() == 24);
 
         StorageArea isolated(path.string(), "https://beta.example");
         assert(isolated.length() == 0);
