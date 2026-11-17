@@ -29,12 +29,22 @@ int main() {
     config.viewport = {1024, 768, 16};
     Browser browser(config);
 
+    auto page = browser.loadHtml(
+        "<html><body><p id='welcome'>Hello SDK</p></body></html>",
+        "https://Example.com/welcome");
+    assert(page.origin().serialize() == "https://example.com");
+    assert(page.document().getElementById("welcome") != nullptr);
+    assert(page.storage() != nullptr);
+    page.storage()->setItem("page-key", "page-value");
+
     auto first = browser.openStorage(Origin::fromUrl("HTTPS://Example.COM:443/one"));
     first->setItem("session-theme", "dark");
 
     auto sameOrigin = browser.openStorage(Origin::fromUrl("https://example.com/two"));
     assert(sameOrigin->getItem("session-theme") ==
            std::optional<std::string>("dark"));
+    assert(sameOrigin->getItem("page-key") ==
+           std::optional<std::string>("page-value"));
 
     auto otherOrigin = browser.openStorage(Origin::fromUrl("https://other.example/"));
     assert(!otherOrigin->getItem("session-theme").has_value());
