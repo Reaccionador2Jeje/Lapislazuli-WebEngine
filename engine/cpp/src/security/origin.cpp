@@ -182,9 +182,12 @@ Origin::Origin(std::string scheme, std::string host, std::uint16_t port)
     : scheme_(std::move(scheme)), host_(std::move(host)), port_(port) {}
 
 Origin Origin::fromUrl(std::string_view url) {
-    if (url.empty() || url.size() > 8192 ||
-        url.find_first_of("\r\n\t ") != std::string_view::npos)
-        throw SecurityError("Invalid URL length or whitespace");
+    if (url.empty() || url.size() > 8192)
+        throw SecurityError("Invalid URL length");
+    for (unsigned char c : url) {
+        if (c <= 0x20 || c == 0x7f)
+            throw SecurityError("URL contains a forbidden control character");
+    }
 
     const auto schemeEnd = url.find("://");
     if (schemeEnd == std::string_view::npos)
