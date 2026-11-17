@@ -5,13 +5,15 @@
 namespace lapislazuli::core {
 namespace {
 
-constexpr std::array<ModuleDescriptor, 9> kModules{{
+constexpr std::array<ModuleDescriptor, 10> kModules{{
     {"dom", "HTML and DOM", ModuleStatus::Experimental,
      "HTML tokenization, document parsing, and mutable DOM primitives."},
     {"css", "CSS", ModuleStatus::Experimental,
      "A limited stylesheet, selector, cascade, and value-processing implementation."},
     {"layout", "Layout", ModuleStatus::Experimental,
      "Initial box-model and block-flow layout calculations."},
+    {"render", "Rendering", ModuleStatus::Experimental,
+     "Backend-neutral display lists for backgrounds, borders, text, and image placement."},
     {"js", "JavaScript", ModuleStatus::Experimental,
      "A limited interpreter runtime with a mutable host DOM bridge."},
     {"net", "Networking", ModuleStatus::Foundation,
