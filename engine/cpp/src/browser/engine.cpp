@@ -262,8 +262,10 @@ Engine::Engine(net::ClientConfig networkConfig) : http_(networkConfig) {}
 std::string Engine::resolveUrl(std::string_view base, std::string_view reference) {
     if (base.empty())
         throw NavigationError("Base URL must be non-empty");
-    if (reference.find_first_of("\r\n\t ") != std::string_view::npos)
-        throw NavigationError("Resource URL contains forbidden whitespace");
+    for (unsigned char c : reference) {
+        if (c <= 0x20 || c == 0x7f)
+            throw NavigationError("Resource URL contains a forbidden control character");
+    }
 
     net::HttpClient::validateUrl(base);
     const auto colon = reference.find(':');
