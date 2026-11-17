@@ -333,15 +333,27 @@ NavigationResult Engine::navigate(const NavigationRequest& request) const {
                               (mime.empty() ? std::string("missing") : mime) + ")");
     }
 
-    html::DocumentParser parser;
-    NavigationResult result;
+    const auto finalUrl = response.effectiveUrl.empty() ? request.url : response.effectiveUrl;
+    auto result = loadHtml(response.body, finalUrl, request.viewport);
     result.statusCode = response.statusCode;
     result.requestedUrl = request.url;
-    result.finalUrl = response.effectiveUrl.empty() ? request.url : response.effectiveUrl;
-    result.origin = security::Origin::fromUrl(result.finalUrl);
     result.contentType = response.contentType;
     result.redirected = response.redirected;
-    result.document = parser.parse(response.body);
+    return result;
+}
+
+NavigationResult Engine::loadHtml(std::string_view source, std::string documentUrl,
+                                  layout::Viewport viewport) const {
+    if (documentUrl.empty()) throw NavigationError("Document URL cannot be empty");
+
+    html::DocumentParser parser;
+    NavigationResult result;
+    result.statusCode = 200;
+    result.requestedUrl = documentUrl;
+    result.finalUrl = documentUrl;
+    result.contentType = "text/html";
+    result.origin = security::Origin::fromUrl(result.finalUrl);
+    result.document = parser.parse(source);
 
     std::string resourceBase = result.finalUrl;
     const auto bases = result.document->getElementsByTagName("base");
@@ -365,7 +377,7 @@ NavigationResult Engine::navigate(const NavigationRequest& request) const {
     for (const auto& sheet : result.styleSheets) styleSheets.push_back(&sheet);
     result.computedStyles = css::StyleResolver{}.computeTree(*result.document, styleSheets);
     result.layoutTree = layout::LayoutEngine{}.layout(
-        *result.document, result.computedStyles, request.viewport);
+        *result.document, result.computedStyles, viewport);
     result.displayList = render::DisplayListBuilder{}.build(
         result.layoutTree, result.computedStyles);
     return result;
