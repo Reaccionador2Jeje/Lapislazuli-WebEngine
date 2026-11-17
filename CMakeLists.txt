@@ -10,6 +10,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(LAPISLAZULI_ENABLE_SANITIZERS
     "Enable AddressSanitizer and UndefinedBehaviorSanitizer for development/tests" OFF)
+option(LAPISLAZULI_BUILD_FUZZERS
+    "Build libFuzzer parser and URL fuzz targets (Clang + sanitizers required)" OFF)
 
 if(LAPISLAZULI_ENABLE_SANITIZERS)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -17,6 +19,15 @@ if(LAPISLAZULI_ENABLE_SANITIZERS)
         add_link_options(-fsanitize=address,undefined)
     else()
         message(FATAL_ERROR "LAPISLAZULI_ENABLE_SANITIZERS requires GCC or Clang")
+    endif()
+endif()
+
+if(LAPISLAZULI_BUILD_FUZZERS)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(FATAL_ERROR "LAPISLAZULI_BUILD_FUZZERS requires Clang")
+    endif()
+    if(NOT LAPISLAZULI_ENABLE_SANITIZERS)
+        message(FATAL_ERROR "Enable LAPISLAZULI_ENABLE_SANITIZERS when building fuzzers")
     endif()
 endif()
 
@@ -157,6 +168,18 @@ add_test(NAME storage_area_tests COMMAND storage_area_tests)
 add_executable(core_tests tests/cpp/core_tests.cpp)
 target_link_libraries(core_tests PRIVATE Lapislazuli::core)
 add_test(NAME core_tests COMMAND core_tests)
+
+if(LAPISLAZULI_BUILD_FUZZERS)
+    add_executable(html_parser_fuzz fuzz/html_parser_fuzz.cpp)
+    target_link_libraries(html_parser_fuzz PRIVATE lapislazuli_dom)
+    target_compile_options(html_parser_fuzz PRIVATE -fsanitize=fuzzer,address,undefined)
+    target_link_options(html_parser_fuzz PRIVATE -fsanitize=fuzzer,address,undefined)
+
+    add_executable(origin_url_fuzz fuzz/origin_url_fuzz.cpp)
+    target_link_libraries(origin_url_fuzz PRIVATE lapislazuli_browser lapislazuli_security)
+    target_compile_options(origin_url_fuzz PRIVATE -fsanitize=fuzzer,address,undefined)
+    target_link_options(origin_url_fuzz PRIVATE -fsanitize=fuzzer,address,undefined)
+endif()
 
 # Installable CMake SDK package for downstream browser projects.
 install(TARGETS
