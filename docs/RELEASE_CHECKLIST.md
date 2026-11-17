@@ -42,7 +42,8 @@ This checklist is an acceptance gate, not a claim that 1.0 is complete.
 
 - [x] Unit and end-to-end smoke tests in CI.
 - [x] Installed SDK consumer test.
-- [ ] Sanitizer builds and fuzzing for parsers and URL handling.
+- [x] AddressSanitizer and UndefinedBehaviorSanitizer CI build and 14-test suite.
+- [ ] Dedicated parser and URL fuzzing harnesses with sustained fuzz runs.
 - [ ] Cross-platform CI.
 - [ ] Documented compatibility profile and migration notes.
 - [ ] Release notes, version/tag policy, and final API review.
