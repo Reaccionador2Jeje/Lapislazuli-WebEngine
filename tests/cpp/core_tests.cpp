@@ -18,9 +18,10 @@ int main() {
     assert(!EngineRuntime::engineName().empty());
 
     const auto modules = EngineRuntime::modules();
-    assert(modules.size() == 8);
+    assert(modules.size() == 9);
     assert(EngineRuntime::findModule("dom") != nullptr);
     assert(EngineRuntime::findModule("storage") != nullptr);
+    assert(EngineRuntime::findModule("security") != nullptr);
     assert(EngineRuntime::findModule("does-not-exist") == nullptr);
     assert(EngineRuntime::findModule("net")->status == ModuleStatus::Foundation);
     assert(EngineRuntime::findModule("js")->status == ModuleStatus::Experimental);
