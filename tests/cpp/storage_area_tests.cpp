@@ -1,4 +1,5 @@
 #include "lapislazuli/storage/storage_area.hpp"
+#include "lapislazuli/security/origin.hpp"
 
 #include <cassert>
 #include <filesystem>
@@ -24,7 +25,7 @@ int main() {
     std::filesystem::remove(path.string() + "-shm", ignored);
 
     {
-        StorageArea first(path.string(), "https://alpha.example:443");
+        StorageArea first(path.string(), lapislazuli::security::Origin::fromUrl("HTTPS://Alpha.Example:443/path"));
         first.setItem("theme", "dark");
         first.setItem("language", "es");
         first.setItem("empty", "");
@@ -47,7 +48,7 @@ int main() {
     }
 
     {
-        StorageArea reopened(path.string(), "https://alpha.example:443");
+        StorageArea reopened(path.string(), lapislazuli::security::Origin::fromUrl("https://alpha.example/another-page"));
         assert(reopened.getItem("theme") == std::optional<std::string>("dark"));
         StorageConfig smallQuota;
         smallQuota.quotaBytes = 8;
