@@ -64,6 +64,13 @@ int main() {
     assert(rich->getElementsByTagName("p").size() == 2);
     assert(rich->textContent() == "A < B & CSecond");
 
+    const auto malformed = parser.parse(
+        "orphan text<html><body>inside</body></html><section>after</section>");
+    assert(malformed->documentElement() != nullptr);
+    assert(malformed->documentElement()->name() == "html");
+    assert(malformed->getElementsByTagName("section").size() == 1);
+    assert(malformed->textContent() == "insideafter");
+
     assert(parsed->getElementsByTagName("*").size() == 4);
     assert(parsed->documentElement()->type() == NodeType::Element);
 
