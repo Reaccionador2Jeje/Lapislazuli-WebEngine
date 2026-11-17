@@ -3,6 +3,8 @@
 #include "lapislazuli/css/css_engine.hpp"
 #include "lapislazuli/dom.hpp"
 #include "lapislazuli/net/http_client.hpp"
+#include "lapislazuli/layout/layout_engine.hpp"
+#include "lapislazuli/render/display_list.hpp"
 #include "lapislazuli/security/origin.hpp"
 
 #include <map>
@@ -10,12 +12,14 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace lapislazuli::browser {
 
 struct NavigationRequest {
     std::string url;
     std::map<std::string, std::string> headers;
+    layout::Viewport viewport;
 };
 
 struct ScriptExecutionReport {
@@ -49,6 +53,9 @@ struct NavigationResult {
     ScriptExecutionReport scripts;
     std::vector<ResourceResult> resources;
     std::vector<css::StyleSheet> styleSheets;
+    std::unordered_map<const dom::Element*, css::ComputedStyle> computedStyles;
+    layout::LayoutResult layoutTree;
+    render::DisplayList displayList;
 };
 
 class NavigationError : public std::runtime_error {
