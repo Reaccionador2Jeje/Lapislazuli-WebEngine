@@ -36,6 +36,10 @@ add_library(lapislazuli_layout engine/cpp/src/layout/layout_engine.cpp)
 lapislazuli_configure_target(lapislazuli_layout layout)
 target_link_libraries(lapislazuli_layout PUBLIC lapislazuli_css lapislazuli_dom)
 
+add_library(lapislazuli_render engine/cpp/src/render/display_list.cpp)
+lapislazuli_configure_target(lapislazuli_render render)
+target_link_libraries(lapislazuli_render PUBLIC lapislazuli_layout lapislazuli_css lapislazuli_dom)
+
 add_library(lapislazuli_js engine/cpp/src/js/runtime.cpp)
 lapislazuli_configure_target(lapislazuli_js js)
 target_link_libraries(lapislazuli_js PUBLIC lapislazuli_dom)
@@ -53,7 +57,7 @@ target_link_libraries(lapislazuli_storage PUBLIC SQLite3::SQLite3 lapislazuli_se
 
 add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp)
 lapislazuli_configure_target(lapislazuli_browser browser)
-target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js lapislazuli_css lapislazuli_security)
+target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js lapislazuli_css lapislazuli_security lapislazuli_render)
 
 # Aggregate target for embedders that want the complete native SDK.
 add_library(lapislazuli_core engine/cpp/src/core.cpp)
@@ -67,6 +71,7 @@ target_link_libraries(lapislazuli_core
         lapislazuli_net
         lapislazuli_storage
         lapislazuli_security
+        lapislazuli_render
 )
 add_library(Lapislazuli::core ALIAS lapislazuli_core)
 add_library(Lapislazuli::dom ALIAS lapislazuli_dom)
@@ -76,6 +81,7 @@ add_library(Lapislazuli::js ALIAS lapislazuli_js)
 add_library(Lapislazuli::net ALIAS lapislazuli_net)
 add_library(Lapislazuli::storage ALIAS lapislazuli_storage)
 add_library(Lapislazuli::security ALIAS lapislazuli_security)
+add_library(Lapislazuli::render ALIAS lapislazuli_render)
 add_library(Lapislazuli::browser ALIAS lapislazuli_browser)
 
 add_executable(lapislazuli engine/cpp/src/main.cpp)
@@ -112,6 +118,10 @@ add_executable(resource_loader_tests tests/cpp/resource_loader_tests.cpp)
 target_link_libraries(resource_loader_tests PRIVATE lapislazuli_browser)
 add_test(NAME resource_loader_tests COMMAND resource_loader_tests)
 
+add_executable(render_tests tests/cpp/render_tests.cpp)
+target_link_libraries(render_tests PRIVATE lapislazuli_render)
+add_test(NAME render_tests COMMAND render_tests)
+
 add_executable(origin_tests tests/cpp/origin_tests.cpp)
 target_link_libraries(origin_tests PRIVATE lapislazuli_security)
 add_test(NAME origin_tests COMMAND origin_tests)
@@ -138,6 +148,7 @@ install(TARGETS
     lapislazuli_net
     lapislazuli_storage
     lapislazuli_security
+    lapislazuli_render
     lapislazuli_browser
     EXPORT LapislazuliTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
