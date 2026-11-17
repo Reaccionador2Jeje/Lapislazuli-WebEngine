@@ -359,6 +359,15 @@ NavigationResult Engine::navigate(const NavigationRequest& request) const {
     runtime.bindDocument(*result.document);
     ResourceBudget budget;
     processDocumentNode(*result.document, resourceBase, http_, runtime, result, budget);
+
+    std::vector<const css::StyleSheet*> styleSheets;
+    styleSheets.reserve(result.styleSheets.size());
+    for (const auto& sheet : result.styleSheets) styleSheets.push_back(&sheet);
+    result.computedStyles = css::StyleResolver{}.computeTree(*result.document, styleSheets);
+    result.layoutTree = layout::LayoutEngine{}.layout(
+        *result.document, result.computedStyles, request.viewport);
+    result.displayList = render::DisplayListBuilder{}.build(
+        result.layoutTree, result.computedStyles);
     return result;
 }
 
