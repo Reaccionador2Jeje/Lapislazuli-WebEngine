@@ -136,6 +136,23 @@ The original string-based storage constructor remains available as a low-level c
 
 This is a security foundation, not a complete browser security architecture. The parser is intentionally constrained: it is not a complete WHATWG URL parser, does not implement IDNA conversion, and does not cover every IPv6 address form. Same-origin comparison is available but is not yet enforced across all DOM, script, storage, and resource APIs. DNS resolution/address pinning, rebinding protection, mixed-content policy, CSP, sandboxing, cookie policy, permissions, and process isolation remain future work. Do not treat the current engine as safe for arbitrary untrusted pages.
 
+## 1.0 architecture work — Stage 6: Rendering pipeline foundations
+
+The browser navigation result now contains a computed style tree, a layout tree, and a backend-neutral display list:
+
+- The navigation request accepts a viewport size.
+- Linked and inline stylesheets are combined for the current style-resolution pass.
+- The style resolver computes the supported cascade for the parsed document.
+- The layout engine produces the initial box tree for that viewport.
+- The rendering module converts layout boxes and computed styles into ordered drawing commands.
+- Supported commands include rectangle fills, rectangle strokes, text drawing, and image placement.
+- Initial color handling includes a small named-color subset and hexadecimal RGB/RGBA forms.
+- Text commands carry color, font size, bold, and italic metadata.
+- Image commands carry their resource URL and layout bounds.
+- The new `lapislazuli_render` module is exported as `Lapislazuli::render` and registered in the runtime module list.
+
+The display list is a renderer-independent handoff for native embedders; it does not itself draw pixels. There is no GPU or software raster backend yet. Font shaping, glyph measurement, advanced line breaking, stacking contexts, z-index, clipping, transforms, opacity, gradients, shadows, full border styles, image decoding, and final pixel output remain future work. The current text layout still estimates glyph widths, and the supported CSS color/paint properties are intentionally limited.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -227,9 +244,9 @@ The lapislazuli_browser target exposes a small C++ integration point:
     request.url = "https://example.com/";
     const auto page = engine.navigate(request);
 
-The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, parses the response body, executes the currently supported inline and external classic scripts, and discovers linked stylesheets and images. The result includes navigation metadata, the DOM, script execution diagnostics, resource records, and parsed stylesheets.
+The facade performs an HTTP GET through lapislazuli_net, accepts HTML/XHTML media types, parses the response body, executes supported inline and external classic scripts, discovers linked stylesheets and images, computes styles and layout for the requested viewport, and builds a backend-neutral display list. The result includes navigation metadata, the canonical origin, the DOM, script diagnostics, resource records, parsed stylesheets, computed styles, layout boxes, and drawing commands.
 
-This is an initial integration seam, not a production browser navigation implementation. It does not yet render pixels, decode and paint images, wire stylesheet results into a complete style/layout/paint lifecycle, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser supports a growing subset of HTML attributes and character references, but still does not implement the full WHATWG parsing algorithm. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
+This is an initial integration seam, not a production browser navigation implementation. It does not yet rasterize pixels, decode image bytes, provide a GPU/window backend, manage history, implement cookies/cache, enforce a complete origin policy, or handle all HTML parsing rules. The parser supports a growing subset of HTML attributes and character references, but still does not implement the full WHATWG parsing algorithm. Do not expose arbitrary untrusted navigation as secure until URL parsing, DNS/address policy, origin enforcement, and the browser security model are implemented.
 
 ## Build
 
@@ -267,6 +284,7 @@ Requirements: Rust and Cargo.
 | 1.0 preparation — Stage 3 | Inline JavaScript execution and mutable DOM bridge |
 | 1.0 preparation — Stage 4 | Relative resource URLs, linked CSS, images, and external classic scripts |
 | 1.0 preparation — Stage 5 | Canonical HTTP(S) origins and origin-keyed storage integration |
+| 1.0 preparation — Stage 6 | Computed styles, viewport layout, and backend-neutral display lists |
 | 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
