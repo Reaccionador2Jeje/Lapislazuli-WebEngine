@@ -3,6 +3,7 @@
 // Public convenience header for native browser embedders.
 // Include individual subsystem headers when a smaller dependency surface is preferred.
 #include "lapislazuli/browser/engine.hpp"
+#include "lapislazuli/browser/browser.hpp"
 #include "lapislazuli/core.hpp"
 #include "lapislazuli/css/css_engine.hpp"
 #include "lapislazuli/dom.hpp"
