@@ -13,7 +13,7 @@ constexpr std::array<ModuleDescriptor, 9> kModules{{
     {"layout", "Layout", ModuleStatus::Experimental,
      "Initial box-model and block-flow layout calculations."},
     {"js", "JavaScript", ModuleStatus::Experimental,
-     "A limited interpreter runtime with an initial read-only DOM bridge."},
+     "A limited interpreter runtime with a mutable host DOM bridge."},
     {"net", "Networking", ModuleStatus::Foundation,
      "HTTP transport with HTTPS-first defaults, TLS verification, and response limits."},
     {"storage", "Persistent storage", ModuleStatus::Foundation,
