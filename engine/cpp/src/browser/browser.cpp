@@ -30,6 +30,13 @@ Page Browser::navigate(NavigationRequest request) const {
     return Page(std::move(result), std::move(area));
 }
 
+Page Browser::loadHtml(std::string source, std::string documentUrl) const {
+    auto result = engine_.loadHtml(source, std::move(documentUrl), config_.viewport);
+    std::unique_ptr<storage::StorageArea> area;
+    if (!config_.storageDatabasePath.empty()) area = openStorage(result.origin);
+    return Page(std::move(result), std::move(area));
+}
+
 Page Browser::navigate(std::string url) const {
     NavigationRequest request;
     request.url = std::move(url);
