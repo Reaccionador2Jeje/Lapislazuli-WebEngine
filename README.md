@@ -184,6 +184,19 @@ Example:
 
 This is an initial native embedder SDK, not a complete browser application framework. It does not yet provide tabs, navigation history, back/forward, downloads, permission prompts, profile encryption, cache management, private sessions, or a stable 1.0 ABI. Mutating the returned DOM does not automatically rerun style calculation, layout, or display-list generation; embedders should treat the generated rendering data as a snapshot.
 
+## 1.0 architecture work — Stage 8: Compatibility foundations
+
+The browser engine now exposes a local-source processing path and a curated end-to-end compatibility test:
+
+- Engine::loadHtml(source, documentUrl, viewport) processes already available HTML without requiring a top-level network request.
+- Browser::loadHtml(source, documentUrl) exposes the same pipeline through the higher-level SDK and attaches origin-partitioned storage when a profile is configured.
+- Both local and network navigation share the same parse, resource, script, style, layout, and display-list pipeline.
+- Non-rendered document elements such as head, style, script, meta, link, title, base, and template are excluded from layout.
+- A compatibility smoke test verifies HTML parsing, inline JavaScript DOM changes, CSS parsing, computed styles, viewport layout, and display-list generation as one flow.
+- docs/COMPATIBILITY.md records supported subsets and major gaps for each subsystem.
+
+The compatibility suite is a project-owned smoke-test set, not the official Web Platform Tests suite. Passing it proves only the behaviors covered by those tests; it is not a browser compatibility score or standards certification.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -317,6 +330,7 @@ Requirements: Rust and Cargo.
 | 1.0 preparation — Stage 5 | Canonical HTTP(S) origins and origin-keyed storage integration |
 | 1.0 preparation — Stage 6 | Computed styles, viewport layout, and backend-neutral display lists |
 | 1.0 preparation — Stage 7 | Public Browser/Page SDK and profile-backed origin storage |
+| 1.0 preparation — Stage 8 | Local document processing, end-to-end compatibility tests, and support matrix |
 | 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
@@ -331,7 +345,7 @@ When reporting a compatibility issue, include a minimal HTML/CSS/JS example, exp
 
 Lapislazuli WebEngine is intended to lower the barrier to experimenting with browser development. It should remain modular, transparent, and accessible to developers with different levels of resources.
 
-The goal is not to promise an instant replacement for existing engines. The goal is to build a capable engine carefully, subsystem by subsystem, and make that work useful to the wider browser-development community.
+The goal is not to promise an instant replacement for existing engines. The goal is to build a capable engine carefully, subsystem by subsystem, and make that work useful to the wider browser-development community. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the tested subset and known gaps.
 
 ## License
 
