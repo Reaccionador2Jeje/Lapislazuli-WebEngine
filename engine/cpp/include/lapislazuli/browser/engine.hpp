@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 
@@ -67,6 +68,9 @@ class Engine {
 public:
     explicit Engine(net::ClientConfig networkConfig = {});
     [[nodiscard]] NavigationResult navigate(const NavigationRequest& request) const;
+    // Processes an already available HTML source through the same document pipeline.
+    [[nodiscard]] NavigationResult loadHtml(std::string_view source, std::string documentUrl,
+                                            layout::Viewport viewport = {}) const;
     // Executes supported classic scripts and loads linked stylesheets and images.
     [[nodiscard]] ScriptExecutionReport executeInlineScripts(dom::Document& document) const;
     // Resolves an HTTP(S) reference against an absolute HTTP(S) base URL.
