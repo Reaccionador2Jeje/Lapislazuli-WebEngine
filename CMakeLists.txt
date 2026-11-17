@@ -118,6 +118,10 @@ add_executable(resource_loader_tests tests/cpp/resource_loader_tests.cpp)
 target_link_libraries(resource_loader_tests PRIVATE lapislazuli_browser)
 add_test(NAME resource_loader_tests COMMAND resource_loader_tests)
 
+add_executable(compatibility_tests tests/cpp/compatibility_tests.cpp)
+target_link_libraries(compatibility_tests PRIVATE lapislazuli_browser)
+add_test(NAME compatibility_tests COMMAND compatibility_tests)
+
 add_executable(browser_sdk_tests tests/cpp/browser_sdk_tests.cpp)
 target_link_libraries(browser_sdk_tests PRIVATE lapislazuli_browser)
 add_test(NAME browser_sdk_tests COMMAND browser_sdk_tests)
