@@ -60,6 +60,7 @@ public:
 
     [[nodiscard]] Page navigate(NavigationRequest request) const;
     [[nodiscard]] Page navigate(std::string url) const;
+    [[nodiscard]] Page loadHtml(std::string source, std::string documentUrl) const;
     [[nodiscard]] std::unique_ptr<storage::StorageArea> openStorage(
         const security::Origin& origin) const;
 
