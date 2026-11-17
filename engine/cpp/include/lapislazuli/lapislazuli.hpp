@@ -10,5 +10,6 @@
 #include "lapislazuli/js/runtime.hpp"
 #include "lapislazuli/layout/layout_engine.hpp"
 #include "lapislazuli/net/http_client.hpp"
+#include "lapislazuli/render/display_list.hpp"
 #include "lapislazuli/security/origin.hpp"
 #include "lapislazuli/storage/storage_area.hpp"
