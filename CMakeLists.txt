@@ -57,7 +57,7 @@ target_link_libraries(lapislazuli_storage PUBLIC SQLite3::SQLite3 lapislazuli_se
 
 add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp engine/cpp/src/browser/browser.cpp)
 lapislazuli_configure_target(lapislazuli_browser browser)
-target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js lapislazuli_css lapislazuli_security lapislazuli_render)
+target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js lapislazuli_css lapislazuli_security lapislazuli_render lapislazuli_storage)
 
 # Aggregate target for embedders that want the complete native SDK.
 add_library(lapislazuli_core engine/cpp/src/core.cpp)
