@@ -30,6 +30,13 @@ int main() {
         rejected = true;
     }
     assert(rejected);
+    std::string nulReference = "image.png";
+    nulReference.push_back(char(0));
+    nulReference += "hidden";
+    rejected = false;
+    try { (void)Engine::resolveUrl(base, nulReference); }
+    catch (const lapislazuli::browser::NavigationError&) { rejected = true; }
+    assert(rejected);
 
     lapislazuli::html::DocumentParser parser;
     auto document = parser.parse(
