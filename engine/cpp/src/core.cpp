@@ -23,7 +23,7 @@ constexpr std::array<ModuleDescriptor, 10> kModules{{
     {"security", "Origin security", ModuleStatus::Foundation,
      "Constrained canonical tuple-origin parsing and same-origin comparisons for HTTP(S) URLs."},
     {"browser", "Browser integration", ModuleStatus::Experimental,
-     "An initial navigation facade with HTML parsing and bounded resource loading."},
+     "An embedder-facing Browser and Page API with navigation, rendering data, and origin storage."},
     {"core", "Runtime and module registry", ModuleStatus::Foundation,
      "Version metadata and discoverable module capability information."}
 }};
