@@ -8,6 +8,18 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(LAPISLAZULI_ENABLE_SANITIZERS
+    "Enable AddressSanitizer and UndefinedBehaviorSanitizer for development/tests" OFF)
+
+if(LAPISLAZULI_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address,undefined)
+    else()
+        message(FATAL_ERROR "LAPISLAZULI_ENABLE_SANITIZERS requires GCC or Clang")
+    endif()
+endif()
+
 find_package(CURL REQUIRED)
 find_package(SQLite3 REQUIRED)
 
