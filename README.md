@@ -98,7 +98,7 @@ The browser facade now connects the experimental JavaScript runtime to parsed HT
 - The native DOM bridge supports `getElementText`, `setElementText`, `setElementAttribute`, `getElementAttribute`, `removeElementAttribute`, and `clickElement`.
 - `clickElement(id)` dispatches the element's inline `onclick` attribute using the same limited interpreter.
 - Script execution results report the number of inline scripts found, successful executions, and per-script errors. A failing script does not prevent later scripts from running.
-- External scripts (`src`) and module scripts are skipped; they are not fetched or executed.
+- At the end of Stage 3, external scripts were not yet fetched; Stage 4 adds ordered loading for supported external classic scripts. JavaScript modules remain unsupported.
 
 The bridge functions are Lapislazuli host APIs, not standard JavaScript `document` objects or standards-compliant DOM methods. The interpreter still has no function declarations, closures, objects, arrays, promises, event loop, timers, or general-purpose event listener API. There is no JavaScript sandbox or standards-complete browser security model yet; this feature must be treated as experimental and must not be presented as safe for arbitrary hostile pages.
 
@@ -119,6 +119,23 @@ The browser facade now performs an initial document resource pass after parsing 
 
 This is an initial resource loader, not a complete browser fetch algorithm. URL resolution is a deliberately limited HTTP(S) resolver rather than a complete WHATWG URL implementation. It does not decode image formats or paint images, and downloaded stylesheets are exposed to the embedder but are not yet wired into a full style/layout/paint lifecycle. `srcset`, responsive image selection, media queries, stylesheet alternate/disabled behavior, script modules, async/defer scheduling, dynamic resource insertion, caching, CSP, and a complete origin/security policy remain future work. External scripts run in the experimental interpreter and must not be considered safe for arbitrary untrusted pages.
 
+## 1.0 architecture work — Stage 5: Security and origin foundations
+
+The new `lapislazuli_security` module introduces a constrained HTTP(S) tuple-origin API:
+
+- Parses absolute HTTP and HTTPS URLs into scheme, host, and effective port.
+- Normalizes scheme and ASCII DNS host casing, removes a trailing DNS dot, and omits default ports when serializing.
+- Validates canonical dotted-decimal IPv4 hosts and bracketed IPv6 literals; IPv6 zero compression is normalized for same-origin comparisons.
+- Rejects user-info, unsupported schemes, malformed authorities, invalid ports, control characters, whitespace, and unsupported host syntax.
+- Provides `Origin::sameOrigin()` for comparing validated tuple origins.
+- Adds the final response origin to `NavigationResult`, so redirects use the final URL's origin.
+- Adds a preferred `StorageArea` constructor that accepts a validated `security::Origin` and uses its canonical serialization as the SQLite partition key.
+- Registers the security module in the public SDK module registry and exports it as `Lapislazuli::security`.
+
+The original string-based storage constructor remains available as a low-level compatibility API. Callers using it are still responsible for supplying a canonical, trusted partition key.
+
+This is a security foundation, not a complete browser security architecture. The parser is intentionally constrained: it is not a complete WHATWG URL parser, does not implement IDNA conversion, and does not cover every IPv6 address form. Same-origin comparison is available but is not yet enforced across all DOM, script, storage, and resource APIs. DNS resolution/address pinning, rebinding protection, mixed-content policy, CSP, sandboxing, cookie policy, permissions, and process isolation remain future work. Do not treat the current engine as safe for arbitrary untrusted pages.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -136,7 +153,7 @@ The C++ CSS module currently provides:
 - Initial margin and padding shorthand expansion.
 - A queryable box-model structure for width, height, margins, padding, borders, and box-sizing.
 
-The C++ JavaScript module introduces a small interpreter-like runtime with let, const, and var declarations (stored in a shared global environment), boolean/null/undefined/numeric/string values, arithmetic and comparison operators, logical operators, parenthesized and unary expressions, registered host functions, built-in print, String, Number, and Boolean functions, an output callback, and a mutable host DOM bridge. The browser facade can execute supported inline classic scripts and dispatch basic inline onclick handlers.
+The C++ JavaScript module introduces a small interpreter-like runtime with let, const, and var declarations (stored in a shared global environment), boolean/null/undefined/numeric/string values, arithmetic and comparison operators, logical operators, parenthesized and unary expressions, registered host functions, built-in print, String, Number, and Boolean functions, an output callback, and a mutable host DOM bridge. The browser facade can execute supported inline and external classic scripts and dispatch basic inline onclick handlers.
 
 Example:
 
@@ -145,7 +162,7 @@ Example:
     let total = price * quantity;
     print('Total:', total);
 
-This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is limited to named host functions rather than the standard JavaScript document API. Script execution supports only inline classic scripts and the documented interpreter subset. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
+This is not a complete ECMAScript implementation. Function declarations, closures, arrays, objects, prototypes, modules, promises, exceptions, browser event loops, and most standard built-ins are not implemented. Variable declarations currently share one global environment; const immutability and JavaScript's full coercion and short-circuit rules are not yet enforced. The DOM bridge is limited to named host functions rather than the standard JavaScript document API. Script execution supports classic inline and external scripts only through the documented interpreter subset. Earlier modules provide only experimental subsets of HTML, CSS, and layout behavior.
 
 ## Networking (0.8)
 
@@ -249,6 +266,7 @@ Requirements: Rust and Cargo.
 | 1.0 preparation — Stage 2 | HTML attributes/entities, CSS attribute selectors, and initial flex layout |
 | 1.0 preparation — Stage 3 | Inline JavaScript execution and mutable DOM bridge |
 | 1.0 preparation — Stage 4 | Relative resource URLs, linked CSS, images, and external classic scripts |
+| 1.0 preparation — Stage 5 | Canonical HTTP(S) origins and origin-keyed storage integration |
 | 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
