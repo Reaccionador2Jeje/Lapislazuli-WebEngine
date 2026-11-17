@@ -197,6 +197,19 @@ The browser engine now exposes a local-source processing path and a curated end-
 
 The compatibility suite is a project-owned smoke-test set, not the official Web Platform Tests suite. Passing it proves only the behaviors covered by those tests; it is not a browser compatibility score or standards certification.
 
+## 1.0 architecture work — Stage 9: Release-candidate preparation
+
+The downstream CMake consumer test now exercises the installed SDK rather than only reading version metadata:
+
+- Links the exported `Lapislazuli::core`, `Lapislazuli::browser`, `Lapislazuli::render`, and `Lapislazuli::security` targets.
+- Includes the public convenience header from the install prefix.
+- Creates a Browser context and processes a local HTML document.
+- Verifies a supported inline JavaScript DOM mutation.
+- Verifies the canonical page origin, generated display list, and profile-backed storage.
+- Removes its temporary SQLite profile after the test.
+
+A new `docs/RELEASE_CHECKLIST.md` records what is implemented and what must still be completed before a 1.0 release. Stage 9 is preparation only: this project remains version 0.9.0, and the checklist explicitly blocks a production-ready 1.0 claim while rasterization, broad compatibility, and critical security work remain incomplete.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -331,6 +344,7 @@ Requirements: Rust and Cargo.
 | 1.0 preparation — Stage 6 | Computed styles, viewport layout, and backend-neutral display lists |
 | 1.0 preparation — Stage 7 | Public Browser/Page SDK and profile-backed origin storage |
 | 1.0 preparation — Stage 8 | Local document processing, end-to-end compatibility tests, and support matrix |
+| 1.0 preparation — Stage 9 | Installed SDK consumer validation and release-readiness checklist |
 | 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
@@ -345,7 +359,7 @@ When reporting a compatibility issue, include a minimal HTML/CSS/JS example, exp
 
 Lapislazuli WebEngine is intended to lower the barrier to experimenting with browser development. It should remain modular, transparent, and accessible to developers with different levels of resources.
 
-The goal is not to promise an instant replacement for existing engines. The goal is to build a capable engine carefully, subsystem by subsystem, and make that work useful to the wider browser-development community. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the tested subset and known gaps.
+The goal is not to promise an instant replacement for existing engines. The goal is to build a capable engine carefully, subsystem by subsystem, and make that work useful to the wider browser-development community. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the tested subset and known gaps, and [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) for the 1.0 acceptance gates.
 
 ## License
 
