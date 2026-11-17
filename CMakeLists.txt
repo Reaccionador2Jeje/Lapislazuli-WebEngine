@@ -55,7 +55,7 @@ add_library(lapislazuli_storage engine/cpp/src/storage/storage_area.cpp)
 lapislazuli_configure_target(lapislazuli_storage storage)
 target_link_libraries(lapislazuli_storage PUBLIC SQLite3::SQLite3 lapislazuli_security)
 
-add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp)
+add_library(lapislazuli_browser engine/cpp/src/browser/engine.cpp engine/cpp/src/browser/browser.cpp)
 lapislazuli_configure_target(lapislazuli_browser browser)
 target_link_libraries(lapislazuli_browser PUBLIC lapislazuli_net lapislazuli_dom lapislazuli_js lapislazuli_css lapislazuli_security lapislazuli_render)
 
@@ -117,6 +117,10 @@ add_test(NAME document_script_tests COMMAND document_script_tests)
 add_executable(resource_loader_tests tests/cpp/resource_loader_tests.cpp)
 target_link_libraries(resource_loader_tests PRIVATE lapislazuli_browser)
 add_test(NAME resource_loader_tests COMMAND resource_loader_tests)
+
+add_executable(browser_sdk_tests tests/cpp/browser_sdk_tests.cpp)
+target_link_libraries(browser_sdk_tests PRIVATE lapislazuli_browser)
+add_test(NAME browser_sdk_tests COMMAND browser_sdk_tests)
 
 add_executable(render_tests tests/cpp/render_tests.cpp)
 target_link_libraries(render_tests PRIVATE lapislazuli_render)
