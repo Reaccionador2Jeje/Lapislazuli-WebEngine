@@ -29,7 +29,8 @@ int main() {
     assert(plain.serialize() == "http://example.com");
     assert(Origin::fromUrl("https://example.com./").serialize() == "https://example.com");
     assert(Origin::fromUrl("https://127.0.0.1:443/").serialize() == "https://127.0.0.1");
-    assert(Origin::fromUrl("https://[2001:db8::1]:443/").serialize() == "https://[2001:db8::1]");
+    assert(Origin::fromUrl("https://[2001:0db8:0:0:0:0:0:1]:443/").serialize() == "https://[2001:db8::1]");
+    assert(Origin::fromUrl("https://[::1]/").sameOrigin(Origin::fromUrl("https://[0:0:0:0:0:0:0:1]:443/")));
 
     rejects([] { (void)Origin::fromUrl("javascript:alert(1)"); });
     rejects([] { (void)Origin::fromUrl("file:///etc/passwd"); });
