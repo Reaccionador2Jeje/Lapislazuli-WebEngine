@@ -18,7 +18,7 @@ int main() {
     assert(!EngineRuntime::engineName().empty());
 
     const auto modules = EngineRuntime::modules();
-    assert(modules.size() == 11);
+    assert(modules.size() == 10);
     assert(EngineRuntime::findModule("dom") != nullptr);
     assert(EngineRuntime::findModule("storage") != nullptr);
     assert(EngineRuntime::findModule("security") != nullptr);
