@@ -120,11 +120,17 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
         switch (token.type) {
             case TokenType::Text: {
                 if (token.data.empty()) break;
-                if (openElements.back() == document.get() && isWhitespaceOnly(token.data)) break;
-                const auto& parentName = openElements.back()->name();
+                dom::Node* textParent = openElements.back();
+                if (textParent == document.get()) {
+                    textParent = document->documentElement();
+                    // A Document cannot contain text nodes. Until implicit body
+                    // synthesis is implemented, ignore text outside the root.
+                    if (!textParent || isWhitespaceOnly(token.data)) break;
+                }
+                const auto& parentName = textParent->name();
                 const bool rawText = parentName == "script" || parentName == "style";
                 const auto text = rawText ? token.data : decodeEntities(token.data);
-                openElements.back()->appendChild(document->createTextNode(text));
+                textParent->appendChild(document->createTextNode(text));
                 break;
             }
             case TokenType::Comment:
@@ -144,7 +150,13 @@ std::unique_ptr<dom::Document> DocumentParser::parse(std::string_view source) co
                 }
 
                 const std::string tagName = element->name();
-                dom::Node& inserted = openElements.back()->appendChild(std::move(element));
+                dom::Node* insertionParent = openElements.back();
+                if (insertionParent == document.get()) {
+                    // Preserve a single document element when malformed input
+                    // contains additional top-level start tags.
+                    if (auto* root = document->documentElement()) insertionParent = root;
+                }
+                dom::Node& inserted = insertionParent->appendChild(std::move(element));
                 if (!isVoidTag(tagName) && !token.self_closing) openElements.push_back(&inserted);
                 break;
             }
