@@ -19,6 +19,13 @@ bool isBlockTag(std::string_view tag) {
     return std::find(std::begin(tags), std::end(tags), tag) != std::end(tags);
 }
 
+bool isNonRenderedTag(std::string_view tag) {
+    static constexpr std::string_view tags[] = {
+        "head", "style", "script", "meta", "link", "title", "base", "template"
+    };
+    return std::find(std::begin(tags), std::end(tags), tag) != std::end(tags);
+}
+
 double number(std::string_view value, double fallback) {
     std::string copy(value);
     char* end = nullptr;
@@ -78,9 +85,10 @@ struct Builder {
         LayoutBox box;
         box.element = &element;
         const auto* style = styleFor(element);
-        box.display = style && style->get("display")
-            ? *style->get("display")
-            : (isBlockTag(element.name()) ? "block" : "inline");
+        box.display = isNonRenderedTag(element.name()) ? "none" :
+            (style && style->get("display")
+                ? *style->get("display")
+                : (isBlockTag(element.name()) ? "block" : "inline"));
         if (box.display == "none") return box;
 
         const double font_size = std::max(1.0,
