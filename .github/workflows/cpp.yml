@@ -41,3 +41,19 @@ jobs:
         run: cmake --build sanitizer-build --parallel 2
       - name: Run sanitizer tests
         run: ctest --test-dir sanitizer-build --output-on-failure
+
+  fuzzers:
+    name: Parser and URL fuzz smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clang and native dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang libcurl4-openssl-dev libsqlite3-dev
+      - name: Configure fuzz targets
+        run: cmake -S . -B fuzz-build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DLAPISLAZULI_ENABLE_SANITIZERS=ON -DLAPISLAZULI_BUILD_FUZZERS=ON
+      - name: Build fuzz targets
+        run: cmake --build fuzz-build --parallel 2 --target html_parser_fuzz origin_url_fuzz
+      - name: Fuzz HTML parser
+        run: ./fuzz-build/html_parser_fuzz fuzz/corpus/html -runs=1000 -max_len=4096
+      - name: Fuzz origin and resource URL parsers
+        run: ./fuzz-build/origin_url_fuzz fuzz/corpus/url -runs=1000 -max_len=4096
