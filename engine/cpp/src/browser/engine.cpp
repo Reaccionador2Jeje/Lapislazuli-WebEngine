@@ -345,6 +345,9 @@ NavigationResult Engine::navigate(const NavigationRequest& request) const {
 NavigationResult Engine::loadHtml(std::string_view source, std::string documentUrl,
                                   layout::Viewport viewport) const {
     if (documentUrl.empty()) throw NavigationError("Document URL cannot be empty");
+    constexpr std::size_t maxHtmlBytes = 16U * 1024U * 1024U;
+    if (source.size() > maxHtmlBytes)
+        throw NavigationError("HTML document exceeded the configured 16 MiB limit");
 
     html::DocumentParser parser;
     NavigationResult result;
