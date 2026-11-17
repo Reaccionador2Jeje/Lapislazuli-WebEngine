@@ -199,7 +199,7 @@ The compatibility suite is a project-owned smoke-test set, not the official Web 
 
 ## 1.0 architecture work — Stage 9: Release-candidate preparation
 
-The downstream CMake consumer test now exercises the installed SDK rather than only reading version metadata. The C++ workflow also has a separate AddressSanitizer/UndefinedBehaviorSanitizer build and test job. Local HTML processing rejects documents larger than 16 MiB before parsing.
+The downstream CMake consumer test now exercises the installed SDK rather than only reading version metadata. The C++ workflow also has separate AddressSanitizer/UndefinedBehaviorSanitizer and Clang libFuzzer jobs. HTML parsing and origin/resource URL handling receive 1,000-iteration fuzz smoke runs from committed seed corpora. URL and request-header validation rejects embedded NUL and other forbidden control characters. Local HTML processing rejects documents larger than 16 MiB before parsing.
 
 - Links the exported `Lapislazuli::core`, `Lapislazuli::browser`, `Lapislazuli::render`, and `Lapislazuli::security` targets.
 - Includes the public convenience header from the install prefix.
@@ -208,7 +208,7 @@ The downstream CMake consumer test now exercises the installed SDK rather than o
 - Verifies the canonical page origin, generated display list, and profile-backed storage.
 - Removes its temporary SQLite profile after the test.
 
-A new `docs/RELEASE_CHECKLIST.md` records what is implemented and what must still be completed before a 1.0 release. Configure a local sanitizer build with `-DLAPISLAZULI_ENABLE_SANITIZERS=ON` to run the suite with ASan and UBSan. Stage 9 is preparation only: this project remains version 0.9.0, and the checklist explicitly blocks a production-ready 1.0 claim while rasterization, broad compatibility, and critical security work remain incomplete.
+A new `docs/RELEASE_CHECKLIST.md` records what is implemented and what must still be completed before a 1.0 release. Configure a local sanitizer build with `-DLAPISLAZULI_ENABLE_SANITIZERS=ON` to run the suite with ASan and UBSan. Clang fuzz targets can be enabled with `-DLAPISLAZULI_BUILD_FUZZERS=ON` alongside the sanitizer option. Stage 9 is preparation only: this project remains version 0.9.0, and the checklist explicitly blocks a production-ready 1.0 claim while rasterization, broad compatibility, and critical security work remain incomplete.
 
 ## Current status
 
