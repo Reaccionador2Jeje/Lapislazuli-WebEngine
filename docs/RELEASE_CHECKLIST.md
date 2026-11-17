@@ -43,7 +43,8 @@ This checklist is an acceptance gate, not a claim that 1.0 is complete.
 - [x] Unit and end-to-end smoke tests in CI.
 - [x] Installed SDK consumer test.
 - [x] AddressSanitizer and UndefinedBehaviorSanitizer CI build and 14-test suite.
-- [ ] Dedicated parser and URL fuzzing harnesses with sustained fuzz runs.
+- [x] Clang libFuzzer harnesses for HTML and URL parsing, with 1,000-iteration CI smoke runs each.
+- [ ] Long-duration scheduled fuzzing, crash-corpus retention, and replay automation.
 - [ ] Cross-platform CI.
 - [ ] Documented compatibility profile and migration notes.
 - [ ] Release notes, version/tag policy, and final API review.
