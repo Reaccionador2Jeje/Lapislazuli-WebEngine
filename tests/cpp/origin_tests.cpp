@@ -42,6 +42,10 @@ int main() {
     rejects([] { (void)Origin::fromUrl("https://[::::]/"); });
     rejects([] { (void)Origin::fromUrl("https://bad_host.example/"); });
     rejects([] { (void)Origin::fromUrl("https://example.com/a b"); });
+    std::string nulOrigin = "https://example.com/path";
+    nulOrigin.push_back(char(0));
+    nulOrigin += "hidden";
+    rejects([&] { (void)Origin::fromUrl(nulOrigin); });
 
     std::cout << "Canonical HTTP(S) origin tests passed.\n";
 }
