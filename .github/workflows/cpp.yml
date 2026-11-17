@@ -27,3 +27,17 @@ jobs:
         run: cmake --build consumer-build --parallel 2
       - name: Run downstream browser consumer
         run: ./consumer-build/lapislazuli_consumer
+
+  sanitizers:
+    name: Address and undefined-behavior sanitizers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libsqlite3-dev
+      - name: Configure sanitizer build
+        run: cmake -S . -B sanitizer-build -DCMAKE_BUILD_TYPE=Debug -DLAPISLAZULI_ENABLE_SANITIZERS=ON
+      - name: Build with sanitizers
+        run: cmake --build sanitizer-build --parallel 2
+      - name: Run sanitizer tests
+        run: ctest --test-dir sanitizer-build --output-on-failure
