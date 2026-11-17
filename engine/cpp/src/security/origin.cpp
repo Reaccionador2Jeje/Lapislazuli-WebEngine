@@ -4,6 +4,7 @@
 #include <charconv>
 #include <cctype>
 #include <string>
+#include <vector>
 
 namespace lapislazuli::security {
 namespace {
@@ -86,6 +87,84 @@ bool validIpv6(std::string_view address) {
     return countGroups(left, groups) && countGroups(right, groups) && groups < 8;
 }
 
+std::string canonicalIpv6(std::string_view address) {
+    const auto compression = address.find("::");
+    std::vector<std::uint16_t> groups;
+    auto appendGroups = [&groups](std::string_view side) {
+        if (side.empty()) return;
+        std::size_t cursor = 0;
+        while (cursor < side.size()) {
+            const auto end = side.find(':', cursor);
+            const auto part = side.substr(cursor,
+                (end == std::string_view::npos ? side.size() : end) - cursor);
+            unsigned value = 0;
+            const auto parsed = std::from_chars(part.data(), part.data() + part.size(), value, 16);
+            if (parsed.ec != std::errc{} || parsed.ptr != part.data() + part.size())
+                throw SecurityError("Malformed IPv6 group");
+            groups.push_back(static_cast<std::uint16_t>(value));
+            if (end == std::string_view::npos) break;
+            cursor = end + 1;
+        }
+    };
+
+    if (compression == std::string_view::npos) {
+        appendGroups(address);
+    } else {
+        appendGroups(address.substr(0, compression));
+        const auto leftCount = groups.size();
+        std::vector<std::uint16_t> right;
+        const auto rightText = address.substr(compression + 2);
+        if (!rightText.empty()) {
+            std::size_t cursor = 0;
+            while (cursor < rightText.size()) {
+                const auto end = rightText.find(':', cursor);
+                const auto part = rightText.substr(cursor,
+                    (end == std::string_view::npos ? rightText.size() : end) - cursor);
+                unsigned value = 0;
+                const auto parsed = std::from_chars(part.data(), part.data() + part.size(), value, 16);
+                if (parsed.ec != std::errc{} || parsed.ptr != part.data() + part.size())
+                    throw SecurityError("Malformed IPv6 group");
+                right.push_back(static_cast<std::uint16_t>(value));
+                if (end == std::string_view::npos) break;
+                cursor = end + 1;
+            }
+        }
+        groups.resize(8 - right.size(), 0);
+        groups.insert(groups.end(), right.begin(), right.end());
+        if (groups.size() != 8 || leftCount + right.size() >= 8)
+            throw SecurityError("Malformed compressed IPv6 address");
+    }
+    if (groups.size() != 8) throw SecurityError("Malformed IPv6 address");
+
+    std::size_t bestStart = groups.size();
+    std::size_t bestLength = 1;
+    for (std::size_t i = 0; i < groups.size();) {
+        if (groups[i] != 0) { ++i; continue; }
+        std::size_t end = i;
+        while (end < groups.size() && groups[end] == 0) ++end;
+        if (end - i > bestLength) {
+            bestStart = i;
+            bestLength = end - i;
+        }
+        i = end;
+    }
+
+    std::string result;
+    for (std::size_t i = 0; i < groups.size();) {
+        if (i == bestStart) {
+            result += "::";
+            i += bestLength;
+            continue;
+        }
+        if (!result.empty() && result.back() != ':') result += ':';
+        char buffer[5]{};
+        const auto converted = std::to_chars(buffer, buffer + sizeof(buffer), groups[i], 16);
+        result.append(buffer, converted.ptr);
+        ++i;
+    }
+    return result;
+}
+
 std::uint16_t parsePort(std::string_view text) {
     if (text.empty() || text.size() > 5)
         throw SecurityError("URL port must be between 1 and 65535");
@@ -131,7 +210,7 @@ Origin Origin::fromUrl(std::string_view url) {
             throw SecurityError("Malformed bracketed IPv6 host");
         const auto address = authority.substr(1, close - 1);
         if (!validIpv6(address)) throw SecurityError("Malformed bracketed IPv6 host");
-        host = "[" + lowerAscii(std::string(address)) + "]";
+        host = "[" + canonicalIpv6(address) + "]";
         const auto suffix = authority.substr(close + 1);
         if (!suffix.empty()) {
             if (suffix.front() != ':') throw SecurityError("Malformed URL authority");
