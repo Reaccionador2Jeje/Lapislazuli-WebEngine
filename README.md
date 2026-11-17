@@ -153,6 +153,37 @@ The browser navigation result now contains a computed style tree, a layout tree,
 
 The display list is a renderer-independent handoff for native embedders; it does not itself draw pixels. There is no GPU or software raster backend yet. Font shaping, glyph measurement, advanced line breaking, stacking contexts, z-index, clipping, transforms, opacity, gradients, shadows, full border styles, image decoding, and final pixel output remain future work. The current text layout still estimates glyph widths, and the supported CSS color/paint properties are intentionally limited.
 
+## 1.0 architecture work — Stage 7: Browser Integration SDK
+
+The public browser SDK now provides a reusable `browser::Browser` context and a move-only `browser::Page` result:
+
+- `BrowserConfig` groups network configuration, an optional profile database path, and the viewport.
+- `Browser::navigate()` performs navigation through the existing HTML, resource, style, layout, and display-list pipeline.
+- `Page` provides access to the navigation result, validated origin, DOM document, layout tree, display list, and resource records.
+- When a profile database path is configured, each returned page receives a persistent `StorageArea` partitioned by its validated canonical origin.
+- `Browser::openStorage(origin)` lets embedders open an origin partition directly.
+- Omitting the profile database path disables page storage; callers do not get an implicit profile file created.
+- The convenience SDK header now includes the Browser and Page APIs.
+
+Example:
+
+    #include <lapislazuli/lapislazuli.hpp>
+
+    lapislazuli::browser::BrowserConfig config;
+    config.storageDatabasePath = "profile/browser.sqlite";
+    config.viewport = {1280, 800, 16};
+
+    lapislazuli::browser::Browser browser(config);
+    auto page = browser.navigate("https://example.com/");
+
+    const auto& origin = page.origin();
+    const auto& drawing = page.displayList();
+    if (auto* storage = page.storage()) {
+        storage->setItem("last-visited", page.navigation().finalUrl);
+    }
+
+This is an initial native embedder SDK, not a complete browser application framework. It does not yet provide tabs, navigation history, back/forward, downloads, permission prompts, profile encryption, cache management, private sessions, or a stable 1.0 ABI. Mutating the returned DOM does not automatically rerun style calculation, layout, or display-list generation; embedders should treat the generated rendering data as a snapshot.
+
 ## Current status
 
 **Milestone 0.9 — persistent origin-partitioned storage and an initial browser-facing navigation facade.**
@@ -235,7 +266,7 @@ Example:
 
 ## Browser integration facade (0.9)
 
-The lapislazuli_browser target exposes a small C++ integration point:
+The lapislazuli_browser target exposes the lower-level Engine facade and the higher-level Browser/Page SDK:
 
     #include "lapislazuli/browser/engine.hpp"
 
@@ -285,6 +316,7 @@ Requirements: Rust and Cargo.
 | 1.0 preparation — Stage 4 | Relative resource URLs, linked CSS, images, and external classic scripts |
 | 1.0 preparation — Stage 5 | Canonical HTTP(S) origins and origin-keyed storage integration |
 | 1.0 preparation — Stage 6 | Computed styles, viewport layout, and backend-neutral display lists |
+| 1.0 preparation — Stage 7 | Public Browser/Page SDK and profile-backed origin storage |
 | 1.0 | Stable, documented engine release after all acceptance criteria pass |
 
 A milestone does not imply complete support for every feature in that area. Compatibility claims will be based on implemented and tested behavior.
